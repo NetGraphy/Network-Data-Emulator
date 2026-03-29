@@ -13,6 +13,8 @@ from snep.models.template import CommandTemplate
 from snep.models.cli_library import CommandOutputLibrary, ParserTemplate
 from snep.models.vendor import Vendor
 from snep.models.software_version import SoftwareVersion
+from snep.models.log_entry import LogEntry
+from snep.models.trap_destination import TrapDestination
 
 __all__ = [
     "Base",
@@ -33,4 +35,6 @@ __all__ = [
     "ConnectionMapping",
     "CommandOutputLibrary",
     "ParserTemplate",
+    "LogEntry",
+    "TrapDestination",
 ]

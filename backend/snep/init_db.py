@@ -36,6 +36,13 @@ async def init():
     except Exception as e:
         print(f"Warning: CLI library seed failed: {e}")
 
+    print("Running scenario seed...")
+    try:
+        from snep.seed_scenarios import main as seed_scenario_main
+        await seed_scenario_main()
+    except Exception as e:
+        print(f"Warning: Scenario seed failed: {e}")
+
 
 if __name__ == "__main__":
     asyncio.run(init())

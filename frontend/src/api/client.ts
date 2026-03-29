@@ -43,7 +43,14 @@ export const parseNeighbors = (data: { raw_output: string; command_type: string 
 
 // Scenarios
 export const fetchScenarios = () => api.get<Scenario[]>('/scenarios').then(r => r.data)
+export const fetchScenario = (id: string) => api.get(`/scenarios/${id}`).then(r => r.data)
 export const createScenario = (data: any) => api.post('/scenarios', data).then(r => r.data)
+export const startScenario = (id: string) => api.post(`/scenarios/${id}/start`).then(r => r.data)
+export const pauseScenario = (id: string) => api.post(`/scenarios/${id}/pause`).then(r => r.data)
+export const resumeScenario = (id: string) => api.post(`/scenarios/${id}/resume`).then(r => r.data)
+export const resetScenario = (id: string) => api.post(`/scenarios/${id}/reset`).then(r => r.data)
+export const getScenarioExecution = (id: string) => api.get(`/scenarios/${id}/execution`).then(r => r.data)
+export const fetchDeviceLogs = (deviceId: string) => api.get(`/scenarios/logs/${deviceId}`).then(r => r.data)
 
 // Execute
 export const executeCommand = (deviceId: string, command: string) =>
