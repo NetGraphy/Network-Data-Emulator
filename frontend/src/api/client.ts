@@ -1,7 +1,11 @@
 import axios from 'axios'
 import type { CLIMapping, Device, InterfaceData, Link, Topology, Scenario, Neighbor, NeighborParseResult } from '../types'
 
-const api = axios.create({ baseURL: '/api/v1' })
+const apiBase = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api/v1`
+  : '/api/v1'
+
+const api = axios.create({ baseURL: apiBase })
 
 // Devices
 export const fetchDevices = () => api.get<Device[]>('/devices').then(r => r.data)
