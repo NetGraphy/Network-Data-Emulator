@@ -6,6 +6,7 @@ import DeviceDetail from './pages/DeviceDetail'
 import CLIModeling from './pages/CLIModeling'
 import ImportWizard from './pages/ImportWizard'
 import ScenarioList from './pages/ScenarioList'
+import Settings from './pages/Settings'
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/cli-modeling" element={<CLIModeling />} />
           <Route path="/import" element={<ImportWizard />} />
           <Route path="/scenarios" element={<ScenarioList />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>
     </BrowserRouter>

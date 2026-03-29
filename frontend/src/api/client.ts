@@ -91,3 +91,8 @@ export const fetchSoftwareVersions = (platformId?: string) => {
 
 // Vendors
 export const fetchVendors = () => api.get('/vendors').then(r => r.data)
+
+// Settings
+export const fetchNetworkingSettings = () => api.get('/settings/networking').then(r => r.data)
+export const updateConnectAddress = (connectAddress: string) =>
+  api.post('/settings/networking/connect-address', { connect_address: connectAddress }).then(r => r.data)

@@ -6,6 +6,7 @@ const navItems = [
   { path: '/cli-modeling', label: 'CLI Modeling', icon: '⌨' },
   { path: '/scenarios', label: 'Scenarios', icon: '⚡' },
   { path: '/import', label: 'Import', icon: '↓' },
+  { path: '/settings', label: 'Settings', icon: '⚙' },
 ]
 
 export default function Sidebar() {
