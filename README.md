@@ -6,6 +6,8 @@ SNEP emulates enterprise network devices at the protocol level. SSH into an emul
 
 This isn't a mock. It's not a simulator. It's a **protocol-level emulator** that makes your tools believe they're talking to real hardware.
 
+> **We're looking for early adopters.** SNEP is in active development and we want network engineers, automation developers, and platform teams to help shape the roadmap. If you're building network automation tooling and need a realistic test environment, [open an issue](https://github.com/NetGraphy/Network-Data-Emulator/issues) to share your use case, request features, or report bugs. Early adopters get direct input on the feature roadmap and priority support.
+
 ![Topology View](docs/screenshots/01-topology.png)
 
 ---
