@@ -43,6 +43,13 @@ async def init():
     except Exception as e:
         print(f"Warning: Scenario seed failed: {e}")
 
+    print("Running custom filter seed...")
+    try:
+        from snep.seed_filters import main as seed_filter_main
+        await seed_filter_main()
+    except Exception as e:
+        print(f"Warning: Custom filter seed failed: {e}")
+
 
 if __name__ == "__main__":
     asyncio.run(init())

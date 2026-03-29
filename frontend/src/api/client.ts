@@ -109,3 +109,15 @@ export const resolveTemplate = (deviceId: string, template: string) =>
 export const fetchNetworkingSettings = () => api.get('/settings/networking').then(r => r.data)
 export const updateConnectAddress = (connectAddress: string) =>
   api.post('/settings/networking/connect-address', { connect_address: connectAddress }).then(r => r.data)
+
+// Custom Filters
+export const fetchCustomFilters = () => api.get('/custom-filters').then(r => r.data)
+export const fetchCustomFilter = (id: string) => api.get(`/custom-filters/${id}`).then(r => r.data)
+export const createCustomFilter = (data: any) => api.post('/custom-filters', data).then(r => r.data)
+export const updateCustomFilter = (id: string, data: any) => api.put(`/custom-filters/${id}`, data).then(r => r.data)
+export const deleteCustomFilter = (id: string) => api.delete(`/custom-filters/${id}`)
+export const testCustomFilter = (data: any) => api.post('/custom-filters/test', data).then(r => r.data)
+export const reloadCustomFilters = () => api.post('/custom-filters/reload').then(r => r.data)
+export const fetchAllowedModules = () => api.get('/custom-filters/modules/allowed').then(r => r.data)
+export const addAllowedModule = (module: string) => api.post('/custom-filters/modules/add', { module }).then(r => r.data)
+export const fetchRegisteredFilters = () => api.get('/custom-filters/registered').then(r => r.data)

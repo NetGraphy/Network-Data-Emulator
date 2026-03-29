@@ -7,6 +7,7 @@ import CLIModeling from './pages/CLIModeling'
 import ImportWizard from './pages/ImportWizard'
 import ScenarioList from './pages/ScenarioList'
 import Settings from './pages/Settings'
+import CustomFilters from './pages/CustomFilters'
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="/import" element={<ImportWizard />} />
           <Route path="/scenarios" element={<ScenarioList />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/custom-filters" element={<CustomFilters />} />
         </Route>
       </Routes>
     </BrowserRouter>

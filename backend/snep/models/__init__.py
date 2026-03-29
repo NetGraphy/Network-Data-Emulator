@@ -15,6 +15,7 @@ from snep.models.vendor import Vendor
 from snep.models.software_version import SoftwareVersion
 from snep.models.log_entry import LogEntry
 from snep.models.trap_destination import TrapDestination
+from snep.models.custom_filter import CustomFilter
 
 __all__ = [
     "Base",
@@ -37,4 +38,5 @@ __all__ = [
     "ParserTemplate",
     "LogEntry",
     "TrapDestination",
+    "CustomFilter",
 ]

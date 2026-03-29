@@ -10,9 +10,17 @@ from snep.config import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: ensure tables exist via alembic (run separately)
+    # Startup: load custom Jinja2 filters from DB
+    try:
+        from snep.db import async_session_factory
+        from snep.services.filter_registry import load_custom_filters
+        async with async_session_factory() as session:
+            result = await load_custom_filters(session)
+            print(f"Custom filters loaded: {result['loaded']} active, {result['failed']} failed")
+    except Exception as e:
+        print(f"Warning: Could not load custom filters: {e}")
     yield
-    # Shutdown: cleanup
+    # Shutdown
     from snep.db import engine
     await engine.dispose()
 
@@ -47,6 +55,7 @@ from snep.api.device_models import router as device_models_router  # noqa: E402
 from snep.api.software_versions import router as ref_data_router  # noqa: E402
 from snep.api.networking import router as networking_router  # noqa: E402
 from snep.api.settings import router as settings_router  # noqa: E402
+from snep.api.custom_filters import router as custom_filters_router  # noqa: E402
 
 app.include_router(platforms_router, prefix="/api/v1/platforms", tags=["platforms"])
 app.include_router(devices_router, prefix="/api/v1/devices", tags=["devices"])
@@ -63,6 +72,7 @@ app.include_router(device_models_router, prefix="/api/v1/device-models", tags=["
 app.include_router(ref_data_router, prefix="/api/v1", tags=["reference-data"])
 app.include_router(networking_router, prefix="/api/v1", tags=["networking"])
 app.include_router(settings_router, prefix="/api/v1", tags=["settings"])
+app.include_router(custom_filters_router, prefix="/api/v1/custom-filters", tags=["custom-filters"])
 
 
 @app.get("/health")

@@ -5,6 +5,7 @@ const navItems = [
   { path: '/devices', label: 'Devices', icon: '▦' },
   { path: '/cli-modeling', label: 'CLI Modeling', icon: '⌨' },
   { path: '/scenarios', label: 'Scenarios', icon: '⚡' },
+  { path: '/custom-filters', label: 'Filters (Code)', icon: '{f}' },
   { path: '/import', label: 'Import', icon: '↓' },
   { path: '/settings', label: 'Settings', icon: '⚙' },
 ]
