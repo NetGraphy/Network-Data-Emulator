@@ -193,20 +193,51 @@ async def _apply_action(session: AsyncSession, event: ScenarioEvent, scenario_id
         return await device_state_change(session, config["device_id"], config["admin_state"], sid, eid)
 
     elif action == "log_event":
-        # Direct log injection
         now = datetime.now(timezone.utc)
+        device_id = config.get("device_id")
+
+        # Custom free-form message with {{ variable }} template support
+        if config.get("custom_message"):
+            from snep.services.template_variables import resolve_variables
+            raw_msg = config["custom_message"]
+            if device_id:
+                raw_msg = await resolve_variables(session, raw_msg, device_id)
+
+            severity = config.get("severity", 5)
+            facility = config.get("facility", "SYS")
+            mnemonic = config.get("mnemonic", "CONFIG_I")
+
+            ts = now.strftime("*%b %d %H:%M:%S.") + f"{now.microsecond // 1000:03d}"
+            formatted = f"{ts}: %{facility}-{severity}-{mnemonic}: {raw_msg}"
+
+            log = LogEntry(
+                device_id=device_id, timestamp=now, severity=severity,
+                facility=facility, mnemonic=mnemonic,
+                message=formatted, raw_message=raw_msg, event_type="custom_log",
+                scenario_id=sid, scenario_event_id=eid,
+            )
+            session.add(log)
+            return [log]
+
+        # Template-based log (predefined syslog formats)
         from snep.services.syslog_templates import render_syslog
+        event_context = config.get("context", {})
+
+        # Resolve {{ variables }} in context values
+        if device_id:
+            from snep.services.template_variables import resolve_variables
+            for key, val in list(event_context.items()):
+                if isinstance(val, str) and "{{" in val:
+                    event_context[key] = await resolve_variables(session, val, device_id)
+
         msgs = render_syslog(
-            config.get("event_type", "config_change"),
-            config.get("context", {}),
-            config.get("platform", "cisco_ios"),
-            config.get("hostname", ""),
-            now,
+            config.get("event_type", "config_change"), event_context,
+            config.get("platform", "cisco_ios"), config.get("hostname", ""), now,
         )
         logs = []
         for msg in msgs:
             log = LogEntry(
-                device_id=config["device_id"], timestamp=now,
+                device_id=device_id, timestamp=now,
                 severity=msg["severity"], facility=msg["facility"],
                 mnemonic=msg["mnemonic"], message=msg["formatted"],
                 raw_message=msg["raw_message"], event_type=msg["event_type"],

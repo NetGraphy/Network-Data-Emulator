@@ -127,3 +127,36 @@ async def _load_snmp_state(db, device_id: str):
         }
 
     return device_data, interfaces_data, snmp_data
+
+
+# --- Template Variables ---
+
+@router.get("/devices/{device_id}/variables")
+async def get_device_variables_endpoint(device_id: uuid.UUID, db: DBSession):
+    """Get all resolved template variables for a device.
+
+    Returns the full list of available variables with their current values.
+    Used by the variable picker in scenarios and CLI modeling.
+    """
+    from snep.services.template_variables import get_device_variables
+    return await get_device_variables(db, str(device_id))
+
+
+@router.get("/template-variables/catalog")
+async def get_variable_catalog():
+    """Get the template variable catalog — all available variable paths with descriptions."""
+    from snep.services.template_variables import VARIABLE_CATALOG
+    return VARIABLE_CATALOG
+
+
+@router.post("/devices/{device_id}/resolve-template")
+async def resolve_template_endpoint(device_id: uuid.UUID, body: dict, db: DBSession):
+    """Resolve a template string with device state variables.
+
+    Input: {"template": "Interface {{ interface.GigabitEthernet1/0/1.name }} is {{ interface.GigabitEthernet1/0/1.oper_status }}"}
+    Output: {"resolved": "Interface GigabitEthernet1/0/1 is up", "original": "..."}
+    """
+    template = body.get("template", "")
+    from snep.services.template_variables import resolve_variables
+    resolved = await resolve_variables(db, template, str(device_id))
+    return {"original": template, "resolved": resolved}

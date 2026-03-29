@@ -4,15 +4,25 @@ import {
   fetchScenarios, fetchScenario, startScenario, pauseScenario,
   resumeScenario, resetScenario, getScenarioExecution,
   createScenario, fetchDevices, fetchInterfaces, fetchLinks,
+  fetchDeviceVariables,
 } from '../api/client'
 
 const ACTION_TYPES = [
-  { value: 'interface_state_change', label: 'Interface State Change', fields: ['interface', 'oper_status'] },
-  { value: 'interface_admin_change', label: 'Interface Admin Change', fields: ['interface', 'admin_status'] },
-  { value: 'device_state_change', label: 'Device State Change', fields: ['device', 'admin_state'] },
-  { value: 'counter_set', label: 'Counter Set', fields: ['interface', 'counter_name', 'value'] },
-  { value: 'counter_rate_change', label: 'Counter Rate Change', fields: ['interface', 'rate_in_bps', 'rate_out_bps'] },
-  { value: 'link_state_change', label: 'Link State Change', fields: ['link', 'admin_state'] },
+  { value: 'interface_state_change', label: 'Interface State Change' },
+  { value: 'interface_admin_change', label: 'Interface Admin Change' },
+  { value: 'device_state_change', label: 'Device State Change' },
+  { value: 'counter_set', label: 'Counter Set' },
+  { value: 'counter_rate_change', label: 'Counter Rate Change' },
+  { value: 'link_state_change', label: 'Link State Change' },
+  { value: 'log_event', label: 'Custom Log Event' },
+]
+
+const SYSLOG_FACILITIES = ['SYS', 'LINK', 'LINEPROTO', 'BGP', 'OSPF', 'CDP', 'HSRP', 'SPANTREE', 'SEC', 'PLATFORM_ENV']
+const SYSLOG_SEVERITIES = [
+  { value: 0, label: '0 - Emergency' }, { value: 1, label: '1 - Alert' },
+  { value: 2, label: '2 - Critical' }, { value: 3, label: '3 - Error' },
+  { value: 4, label: '4 - Warning' }, { value: 5, label: '5 - Notification' },
+  { value: 6, label: '6 - Informational' }, { value: 7, label: '7 - Debug' },
 ]
 
 const TRIGGER_TYPES = [
@@ -403,6 +413,53 @@ function ScenarioBuilder({ onBack }: { onBack: () => void }) {
                   </div>
                 </>
               )}
+
+              {/* Custom Log Event */}
+              {event.action_type === 'log_event' && (
+                <>
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">Device</label>
+                    <select value={event.action_config.device_id || ''} onChange={e => updateEvent(i, 'action_config.device_id', e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none">
+                      <option value="">Select device...</option>
+                      {devices?.map((d: any) => <option key={d.id} value={d.id}>{d.hostname}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">Severity</label>
+                    <select value={event.action_config.severity ?? ''} onChange={e => updateEvent(i, 'action_config.severity', parseInt(e.target.value))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none">
+                      {SYSLOG_SEVERITIES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">Facility</label>
+                    <select value={event.action_config.facility || ''} onChange={e => updateEvent(i, 'action_config.facility', e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none">
+                      {SYSLOG_FACILITIES.map(f => <option key={f} value={f}>{f}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">Mnemonic</label>
+                    <input value={event.action_config.mnemonic || ''} onChange={e => updateEvent(i, 'action_config.mnemonic', e.target.value)}
+                      placeholder="e.g., UPDOWN, CONFIG_I"
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-xs text-gray-400 block mb-1">Message (supports {'{{ variables }}'})</label>
+                    <textarea value={event.action_config.custom_message || ''} onChange={e => updateEvent(i, 'action_config.custom_message', e.target.value)}
+                      rows={2} placeholder="e.g., Interface {{ interface.GigabitEthernet1/0/1.name }} on {{ device.hostname }} experienced a fault"
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm font-mono focus:border-cyan-500 focus:outline-none resize-none" />
+                    {/* Variable picker */}
+                    {event.action_config.device_id && (
+                      <VariablePicker deviceId={event.action_config.device_id} onInsert={(v: string) => {
+                        const cur = event.action_config.custom_message || ''
+                        updateEvent(i, 'action_config.custom_message', cur + `{{ ${v} }}`)
+                      }} />
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         ))}
@@ -412,6 +469,35 @@ function ScenarioBuilder({ onBack }: { onBack: () => void }) {
             Click "+ Add Event" to build your scenario. Events execute in order.
           </div>
         )}
+      </div>
+
+      {/* Help: Template Variables Documentation */}
+      <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
+        <h3 className="font-medium text-gray-200 mb-3">Template Variables Guide</h3>
+        <p className="text-xs text-gray-400 mb-3">
+          Use <code className="bg-gray-800 px-1 rounded text-cyan-400">{'{{ variable.path }}'}</code> in custom log messages to insert device state dynamically.
+          Variables are resolved at execution time from the target device's current state.
+        </p>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-[11px]">
+          <div className="font-mono text-cyan-400">{'{{ device.hostname }}'}</div><div className="text-gray-500">Device hostname</div>
+          <div className="font-mono text-cyan-400">{'{{ device.management_ip }}'}</div><div className="text-gray-500">Management IP</div>
+          <div className="font-mono text-cyan-400">{'{{ device.serial_number }}'}</div><div className="text-gray-500">Serial number</div>
+          <div className="font-mono text-cyan-400">{'{{ device.software_version }}'}</div><div className="text-gray-500">Software version</div>
+          <div className="font-mono text-cyan-400">{'{{ device.uptime }}'}</div><div className="text-gray-500">Current uptime</div>
+          <div className="font-mono text-cyan-400">{'{{ model.display_name }}'}</div><div className="text-gray-500">Hardware model</div>
+          <div className="font-mono text-cyan-400">{'{{ platform.name }}'}</div><div className="text-gray-500">Platform (cisco_ios, arista_eos)</div>
+          <div className="font-mono text-cyan-400">{'{{ interface.<name>.name }}'}</div><div className="text-gray-500">Interface full name</div>
+          <div className="font-mono text-cyan-400">{'{{ interface.<name>.oper_status }}'}</div><div className="text-gray-500">Operational status</div>
+          <div className="font-mono text-cyan-400">{'{{ interface.<name>.ip_address }}'}</div><div className="text-gray-500">IP address</div>
+          <div className="font-mono text-cyan-400">{'{{ counter.<name>.in_errors }}'}</div><div className="text-gray-500">Error counter</div>
+          <div className="font-mono text-cyan-400">{'{{ snmp.community }}'}</div><div className="text-gray-500">SNMP community</div>
+          <div className="font-mono text-cyan-400">{'{{ now.cisco_timestamp }}'}</div><div className="text-gray-500">Cisco syslog timestamp</div>
+        </div>
+        <p className="text-[10px] text-gray-600 mt-3">
+          Replace <code className="text-gray-500">{'<name>'}</code> with the actual interface name, e.g.,
+          <code className="text-cyan-400/50 ml-1">{'{{ interface.GigabitEthernet1/0/1.oper_status }}'}</code>.
+          Select a device first to use the variable picker which shows all available variables with their current values.
+        </p>
       </div>
 
       {/* Save */}
@@ -424,6 +510,58 @@ function ScenarioBuilder({ onBack }: { onBack: () => void }) {
           Cancel
         </button>
       </div>
+    </div>
+  )
+}
+
+
+// === Variable Picker ===
+
+function VariablePicker({ deviceId, onInsert }: { deviceId: string; onInsert: (v: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const [filter, setFilter] = useState('')
+  const { data: variables } = useQuery({
+    queryKey: ['device-variables', deviceId],
+    queryFn: () => fetchDeviceVariables(deviceId),
+    enabled: open && !!deviceId,
+  })
+
+  const filtered = (variables || []).filter((v: any) =>
+    v.path.toLowerCase().includes(filter.toLowerCase()) || v.value.toLowerCase().includes(filter.toLowerCase())
+  )
+
+  // Group by category
+  const grouped: Record<string, any[]> = {}
+  for (const v of filtered) {
+    const cat = v.category || 'Other'
+    ;(grouped[cat] = grouped[cat] || []).push(v)
+  }
+
+  return (
+    <div className="mt-1.5">
+      <button onClick={() => setOpen(!open)} className="text-[10px] text-cyan-400 hover:text-cyan-300">
+        {open ? 'Close variable picker' : 'Insert variable from device state...'}
+      </button>
+      {open && (
+        <div className="mt-2 bg-gray-800 rounded-lg border border-gray-700 max-h-60 overflow-auto">
+          <div className="sticky top-0 bg-gray-800 p-2 border-b border-gray-700">
+            <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Filter variables..."
+              className="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs focus:border-cyan-500 focus:outline-none" />
+          </div>
+          {Object.entries(grouped).map(([cat, vars]) => (
+            <div key={cat}>
+              <div className="px-2 py-1 text-[10px] font-medium text-gray-500 bg-gray-800/80 sticky top-[41px]">{cat}</div>
+              {(vars as any[]).map((v: any) => (
+                <button key={v.path} onClick={() => { onInsert(v.path); setOpen(false); }}
+                  className="w-full text-left px-2 py-1 hover:bg-gray-700/50 flex items-center justify-between gap-2">
+                  <span className="font-mono text-[10px] text-cyan-400 truncate">{v.path}</span>
+                  <span className="text-[10px] text-gray-500 truncate max-w-[150px]">{v.value}</span>
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

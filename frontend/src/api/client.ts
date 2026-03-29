@@ -99,6 +99,12 @@ export const fetchSoftwareVersions = (platformId?: string) => {
 // Vendors
 export const fetchVendors = () => api.get('/vendors').then(r => r.data)
 
+// Template Variables
+export const fetchDeviceVariables = (deviceId: string) => api.get(`/devices/${deviceId}/variables`).then(r => r.data)
+export const fetchVariableCatalog = () => api.get('/template-variables/catalog').then(r => r.data)
+export const resolveTemplate = (deviceId: string, template: string) =>
+  api.post(`/devices/${deviceId}/resolve-template`, { template }).then(r => r.data)
+
 // Settings
 export const fetchNetworkingSettings = () => api.get('/settings/networking').then(r => r.data)
 export const updateConnectAddress = (connectAddress: string) =>
