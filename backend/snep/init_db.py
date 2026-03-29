@@ -50,6 +50,13 @@ async def init():
     except Exception as e:
         print(f"Warning: Custom filter seed failed: {e}")
 
+    print("Running import mapping seed...")
+    try:
+        from snep.seed_mappings import main as seed_mapping_main
+        await seed_mapping_main()
+    except Exception as e:
+        print(f"Warning: Import mapping seed failed: {e}")
+
 
 if __name__ == "__main__":
     asyncio.run(init())

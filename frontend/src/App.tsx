@@ -5,6 +5,7 @@ import DeviceList from './pages/DeviceList'
 import DeviceDetail from './pages/DeviceDetail'
 import CLIModeling from './pages/CLIModeling'
 import ImportWizard from './pages/ImportWizard'
+import QueryExplorer from './pages/QueryExplorer'
 import ScenarioList from './pages/ScenarioList'
 import Settings from './pages/Settings'
 import CustomFilters from './pages/CustomFilters'
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/devices/:id/cli" element={<CLIModeling />} />
           <Route path="/cli-modeling" element={<CLIModeling />} />
           <Route path="/import" element={<ImportWizard />} />
+          <Route path="/query-explorer" element={<QueryExplorer />} />
           <Route path="/scenarios" element={<ScenarioList />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/custom-filters" element={<CustomFilters />} />

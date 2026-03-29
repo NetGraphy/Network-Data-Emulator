@@ -16,6 +16,8 @@ from snep.models.software_version import SoftwareVersion
 from snep.models.log_entry import LogEntry
 from snep.models.trap_destination import TrapDestination
 from snep.models.custom_filter import CustomFilter
+from snep.models.data_source import DataSource
+from snep.models.import_mapping import ImportMapping
 
 __all__ = [
     "Base",
@@ -39,4 +41,6 @@ __all__ = [
     "LogEntry",
     "TrapDestination",
     "CustomFilter",
+    "DataSource",
+    "ImportMapping",
 ]

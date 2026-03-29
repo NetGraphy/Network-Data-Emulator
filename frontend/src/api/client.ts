@@ -105,6 +105,17 @@ export const fetchVariableCatalog = () => api.get('/template-variables/catalog')
 export const resolveTemplate = (deviceId: string, template: string) =>
   api.post(`/devices/${deviceId}/resolve-template`, { template }).then(r => r.data)
 
+// Query Explorer
+export const fetchDataSources = () => api.get('/query/data-sources').then(r => r.data)
+export const createDataSource = (data: any) => api.post('/query/data-sources', data).then(r => r.data)
+export const deleteDataSource = (id: string) => api.delete(`/query/data-sources/${id}`)
+export const fetchQueryMappings = () => api.get('/query/mappings').then(r => r.data)
+export const fetchQueryMapping = (id: string) => api.get(`/query/mappings/${id}`).then(r => r.data)
+export const executeQueryAPI = (sourceId: string, query: string) =>
+  api.post('/query/execute', { source_id: sourceId, query }).then(r => r.data)
+export const previewImportMapping = (data: any) => api.post('/query/preview', data).then(r => r.data)
+export const runQueryImport = (data: any) => api.post('/query/import', data).then(r => r.data)
+
 // Settings
 export const fetchNetworkingSettings = () => api.get('/settings/networking').then(r => r.data)
 export const updateConnectAddress = (connectAddress: string) =>
