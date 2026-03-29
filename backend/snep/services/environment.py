@@ -32,14 +32,33 @@ def detect_environment() -> dict:
         }
 
     # 2. Railway cloud
-    railway_domain = os.environ.get("RAILWAY_TCP_PROXY_DOMAIN") or os.environ.get("RAILWAY_PUBLIC_DOMAIN")
-    if railway_domain:
-        return {
-            "type": "cloud_railway",
-            "connect_address": railway_domain,
-            "listen_address": "0.0.0.0",
-            "note": "Railway detected. SSH/SNMP require TCP proxy configuration in Railway.",
-        }
+    railway_tcp = os.environ.get("RAILWAY_TCP_PROXY_DOMAIN")
+    railway_http = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
+    if railway_http:
+        # Railway only proxies HTTP by default. SSH/SNMP need a TCP proxy
+        # which gives a separate domain+port via RAILWAY_TCP_PROXY_DOMAIN.
+        # If no TCP proxy configured, SSH/SNMP are NOT reachable externally.
+        if railway_tcp:
+            tcp_port = os.environ.get("RAILWAY_TCP_PROXY_PORT", "")
+            return {
+                "type": "cloud_railway_tcp",
+                "connect_address": railway_tcp,
+                "tcp_proxy_port": tcp_port,
+                "api_domain": railway_http,
+                "listen_address": "0.0.0.0",
+                "ssh_reachable": True,
+                "note": f"Railway TCP proxy active at {railway_tcp}:{tcp_port}. SSH/SNMP reachable externally.",
+            }
+        else:
+            return {
+                "type": "cloud_railway_http_only",
+                "connect_address": "NOT_REACHABLE",
+                "api_domain": railway_http,
+                "listen_address": "0.0.0.0",
+                "ssh_reachable": False,
+                "note": "Railway HTTP-only mode. SSH/SNMP are NOT reachable externally. "
+                        "To enable: run locally with 'docker compose up', or configure a Railway TCP proxy.",
+            }
 
     # 3. Docker container
     if _is_docker():
@@ -70,10 +89,10 @@ def detect_environment() -> dict:
 
 
 def get_connect_address() -> str:
-    """Get the resolved connect address for external tool connectivity.
+    """Get the resolved connect address for SSH/SNMP tool connectivity.
 
-    This is the IP/hostname that should appear in Nornir inventories,
-    Ansible inventories, and the UI connection info.
+    Returns the IP/hostname that external tools should use.
+    Returns 'NOT_REACHABLE' if SSH/SNMP cannot be reached (e.g., Railway HTTP-only).
     """
     env = detect_environment()
     addr = env["connect_address"]

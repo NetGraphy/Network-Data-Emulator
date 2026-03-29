@@ -247,6 +247,30 @@ export default function DeviceDetail() {
       {tab === 'connection' && device.connection_info && (
         <div className="space-y-4">
           {/* Connect commands */}
+          {/* Warning if not reachable */}
+          {device.connection_info.ssh?.host === 'NOT_REACHABLE' && (
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 text-sm">
+              <h3 className="font-medium text-yellow-400 mb-1">SSH/SNMP Not Reachable from Cloud</h3>
+              <p className="text-yellow-300/70 text-xs leading-relaxed">
+                This SNEP instance is running on Railway which only proxies HTTP traffic.
+                SSH and SNMP ports are not exposed externally.
+              </p>
+              <p className="text-yellow-300/70 text-xs mt-2 leading-relaxed">
+                <strong>To connect with tools:</strong> Clone the repo and run <code className="bg-yellow-900/30 px-1 rounded">docker compose up</code> locally.
+                SSH/SNMP will be available on <code className="bg-yellow-900/30 px-1 rounded">127.0.0.1</code> with port-per-device mapping.
+              </p>
+              <div className="mt-3 space-y-1.5">
+                <code className="bg-gray-800 px-3 py-2 rounded-lg block font-mono text-cyan-400 text-xs">
+                  ssh admin@127.0.0.1 -p {device.connection_info.ssh?.port || 10000}
+                </code>
+                <code className="bg-gray-800 px-3 py-2 rounded-lg block font-mono text-cyan-400 text-xs">
+                  snmpwalk -v2c -c {device.snmp_profile?.v2_community || 'public'} 127.0.0.1:{device.connection_info.snmp?.port || 20000} 1.3.6.1.2.1.1
+                </code>
+              </div>
+            </div>
+          )}
+
+          {device.connection_info.ssh?.host !== 'NOT_REACHABLE' && (
           <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 space-y-4 text-sm">
             <h3 className="font-medium text-gray-200">Connection Commands</h3>
             {device.connection_info.ssh && (
@@ -272,6 +296,7 @@ export default function DeviceDetail() {
               </div>
             )}
           </div>
+          )}
 
           {/* Nornir inventory entry */}
           <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 text-sm">

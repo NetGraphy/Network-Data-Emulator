@@ -52,7 +52,12 @@ async def export_nornir(db: DBSession):
 
         hosts[d.hostname] = host_entry
 
-    return {
+    # Check if SSH is reachable and add warning if not
+    from snep.services.environment import detect_environment
+    env = detect_environment()
+    reachable = env.get("ssh_reachable", True)
+
+    result_data = {
         "hosts": hosts,
         "groups": {},
         "defaults": {
@@ -60,6 +65,11 @@ async def export_nornir(db: DBSession):
             "password": "cisco123",
         },
     }
+    if not reachable:
+        result_data["_warning"] = env.get("note", "SSH/SNMP may not be reachable in this environment.")
+        result_data["_run_locally"] = "Run SNEP locally with 'docker compose up' for SSH/SNMP access."
+
+    return result_data
 
 
 @router.get("/ansible")

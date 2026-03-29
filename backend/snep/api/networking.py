@@ -54,8 +54,31 @@ async def networking_status(db: DBSession):
             "ssh_port_range": f"{ssh_range[0]}-{ssh_range[1]}" if ssh_range and ssh_range[0] else "none",
             "snmp_port_range": f"{snmp_range[0]}-{snmp_range[1]}" if snmp_range and snmp_range[0] else "none",
         },
-        "example_connection": {
-            "ssh": f"ssh admin@{sample_mapping.connect_address} -p {sample_mapping.connect_port}" if sample_mapping else None,
-            "snmp": f"snmpwalk -v2c -c public {sample_mapping.connect_address}:{sample_mapping.connect_port + 10000}" if sample_mapping else None,
+        "connectivity": _build_connectivity_info(env, sample_mapping),
+    }
+
+
+def _build_connectivity_info(env: dict, sample_mapping) -> dict:
+    reachable = env.get("ssh_reachable", True) and env.get("connect_address") != "NOT_REACHABLE"
+
+    if not reachable:
+        return {
+            "ssh_reachable": False,
+            "note": env.get("note", ""),
+            "how_to_connect": "Run SNEP locally: git clone the repo and run 'docker compose up'. "
+                              "SSH/SNMP will be available on 127.0.0.1 with port-per-device mapping.",
+            "local_example": {
+                "ssh": f"ssh admin@127.0.0.1 -p {sample_mapping.listen_port}" if sample_mapping else None,
+                "snmp": f"snmpwalk -v2c -c public 127.0.0.1:{sample_mapping.listen_port + 10000}" if sample_mapping else None,
+            } if sample_mapping else None,
+        }
+
+    addr = env["connect_address"]
+    return {
+        "ssh_reachable": True,
+        "note": env.get("note", ""),
+        "example": {
+            "ssh": f"ssh admin@{addr} -p {sample_mapping.connect_port}" if sample_mapping else None,
+            "snmp": f"snmpwalk -v2c -c public {addr}:{sample_mapping.connect_port + 10000}" if sample_mapping else None,
         } if sample_mapping else None,
     }
