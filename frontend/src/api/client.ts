@@ -49,6 +49,12 @@ export const createScenario = (data: any) => api.post('/scenarios', data).then(r
 export const executeCommand = (deviceId: string, command: string) =>
   api.post(`/devices/${deviceId}/execute`, { command }).then(r => r.data)
 
+// SNMP Walk / Get
+export const snmpWalk = (deviceId: string, subtree: string = 'all', outputFormat: string = 'named') =>
+  api.post(`/devices/${deviceId}/snmp-walk`, { subtree, output_format: outputFormat }).then(r => r.data)
+export const snmpGet = (deviceId: string, oid: string, outputFormat: string = 'named') =>
+  api.post(`/devices/${deviceId}/snmp-get`, { oid, output_format: outputFormat }).then(r => r.data)
+
 // Export
 export const exportNornir = () => api.get('/export/nornir').then(r => r.data)
 export const exportAnsible = () => api.get('/export/ansible').then(r => r.data)

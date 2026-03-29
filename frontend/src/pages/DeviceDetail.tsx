@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchDevice, fetchInterfaces, fetchDeviceNeighbors, updateInterface, executeCommand } from '../api/client'
+import { fetchDevice, fetchInterfaces, fetchDeviceNeighbors, updateInterface, executeCommand, snmpWalk } from '../api/client'
 
 type Tab = 'interfaces' | 'neighbors' | 'cli' | 'snmp' | 'connection'
 
@@ -242,13 +242,7 @@ export default function DeviceDetail() {
         </div>
       )}
 
-      {tab === 'snmp' && device.snmp_profile && (
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 space-y-3 text-sm">
-          <div><span className="text-gray-400 w-32 inline-block">SNMPv2:</span> {device.snmp_profile.v2_enabled ? 'Enabled' : 'Disabled'}</div>
-          <div><span className="text-gray-400 w-32 inline-block">Community:</span> <span className="font-mono">{device.snmp_profile.v2_community}</span></div>
-          <div><span className="text-gray-400 w-32 inline-block">SNMPv3:</span> {device.snmp_profile.v3_enabled ? 'Enabled' : 'Disabled'}</div>
-        </div>
-      )}
+      {tab === 'snmp' && <SNMPTab device={device} deviceId={id!} />}
 
       {tab === 'connection' && device.connection_info && (
         <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 space-y-4 text-sm">
@@ -268,6 +262,134 @@ export default function DeviceDetail() {
               </code>
             </div>
           )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+
+function SNMPTab({ device, deviceId }: { device: any; deviceId: string }) {
+  const [subtree, setSubtree] = useState('system')
+  const [outputFormat, setOutputFormat] = useState('named')
+  const [walkOutput, setWalkOutput] = useState('')
+  const [walking, setWalking] = useState(false)
+  const [lineCount, setLineCount] = useState(0)
+
+  const doWalk = async () => {
+    setWalking(true)
+    setWalkOutput('')
+    try {
+      const result = await snmpWalk(deviceId, subtree, outputFormat)
+      setWalkOutput(result.output)
+      setLineCount(result.line_count)
+    } catch (e: any) {
+      setWalkOutput(`Error: ${e?.response?.data?.detail || e?.message || 'SNMP walk failed'}`)
+    } finally {
+      setWalking(false)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* SNMP Profile info */}
+      {device.snmp_profile && (
+        <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 text-sm grid grid-cols-3 gap-4">
+          <div>
+            <span className="text-gray-500 text-xs block">SNMPv2</span>
+            <span className={device.snmp_profile.v2_enabled ? 'text-green-400' : 'text-gray-500'}>
+              {device.snmp_profile.v2_enabled ? 'Enabled' : 'Disabled'}
+            </span>
+            {device.snmp_profile.v2_community && (
+              <span className="text-gray-400 ml-2 font-mono text-xs">({device.snmp_profile.v2_community})</span>
+            )}
+          </div>
+          <div>
+            <span className="text-gray-500 text-xs block">SNMPv3</span>
+            <span className={device.snmp_profile.v3_enabled ? 'text-green-400' : 'text-gray-500'}>
+              {device.snmp_profile.v3_enabled ? 'Enabled' : 'Disabled'}
+            </span>
+          </div>
+          <div>
+            <span className="text-gray-500 text-xs block">Connection</span>
+            {device.connection_info?.snmp && (
+              <span className="font-mono text-xs text-gray-300">
+                {device.connection_info.snmp.host}:{device.connection_info.snmp.port}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* SNMP Walk controls */}
+      <div className="flex gap-2 items-end">
+        <div className="flex-1">
+          <label className="text-xs text-gray-400 block mb-1">MIB Subtree</label>
+          <select
+            value={subtree}
+            onChange={e => { setSubtree(e.target.value); setWalkOutput(''); }}
+            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2.5 text-sm font-mono focus:border-cyan-500 focus:outline-none"
+          >
+            <optgroup label="Common Walks">
+              <option value="system">system (sysDescr, sysName, sysUpTime, ...)</option>
+              <option value="ifTable">IF-MIB::ifTable (ifIndex, ifDescr, ifType, ifSpeed, ifStatus, counters)</option>
+              <option value="ifXTable">IF-MIB::ifXTable (ifName, ifHCInOctets, ifHighSpeed, ifAlias)</option>
+              <option value="interfaces">interfaces (ifNumber + ifTable)</option>
+            </optgroup>
+            <optgroup label="Full Walk">
+              <option value="all">All MIBs (system + IF-MIB)</option>
+            </optgroup>
+            <optgroup label="Numeric OID">
+              <option value="1.3.6.1.2.1.1">1.3.6.1.2.1.1 (system)</option>
+              <option value="1.3.6.1.2.1.2.2">1.3.6.1.2.1.2.2 (ifTable)</option>
+              <option value="1.3.6.1.2.1.31.1.1">1.3.6.1.2.1.31.1.1 (ifXTable)</option>
+            </optgroup>
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-gray-400 block mb-1">Format</label>
+          <select
+            value={outputFormat}
+            onChange={e => setOutputFormat(e.target.value)}
+            className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2.5 text-sm focus:border-cyan-500 focus:outline-none"
+          >
+            <option value="named">MIB Names</option>
+            <option value="numeric">Numeric OIDs</option>
+          </select>
+        </div>
+        <button
+          onClick={doWalk}
+          disabled={walking}
+          className="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+        >
+          {walking ? 'Walking...' : 'SNMP Walk'}
+        </button>
+      </div>
+
+      {/* Walk output */}
+      {walkOutput && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-gray-400 font-mono">
+              $ snmpwalk -v2c -c {device.snmp_profile?.v2_community || 'public'} {device.hostname} {subtree}
+              <span className="text-gray-600 ml-2">({lineCount} OIDs)</span>
+            </span>
+            <button
+              onClick={() => navigator.clipboard.writeText(walkOutput)}
+              className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              Copy
+            </button>
+          </div>
+          <pre className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-xs font-mono text-green-400 overflow-auto max-h-[600px] whitespace-pre leading-relaxed">
+            {walkOutput}
+          </pre>
+        </div>
+      )}
+
+      {!walkOutput && !walking && (
+        <div className="text-center text-gray-500 text-sm py-12">
+          Select a MIB subtree and click SNMP Walk to preview the OID output
         </div>
       )}
     </div>
