@@ -6,17 +6,17 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from snep.models import Device, Interface, InterfaceCounter, Link
+from snep.models import Device, DeviceModel, Interface, InterfaceCounter, Link, Platform
 from snep.services.counter import compute_current_counter, compute_current_packets
 
 
 async def get_device_full(session: AsyncSession, device_id: str) -> Device | None:
-    """Load a device with all relationships."""
+    """Load a device with all relationships including nested platform."""
     result = await session.execute(
         select(Device)
         .options(
             selectinload(Device.interfaces).selectinload(Interface.counter),
-            selectinload(Device.device_model),
+            selectinload(Device.device_model).selectinload(DeviceModel.platform),
             selectinload(Device.snmp_profile),
             selectinload(Device.credentials),
             selectinload(Device.connection_mappings),

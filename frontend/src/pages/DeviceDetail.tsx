@@ -22,10 +22,20 @@ export default function DeviceDetail() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['interfaces', id] }),
   })
 
+  const [executing, setExecuting] = useState(false)
+
   const runCommand = async () => {
     if (!command.trim() || !id) return
-    const result = await executeCommand(id, command)
-    setOutput(result.output)
+    setExecuting(true)
+    setOutput('')
+    try {
+      const result = await executeCommand(id, command)
+      setOutput(result.output)
+    } catch (e: any) {
+      setOutput(`Error: ${e?.response?.data?.detail || e?.message || 'Command execution failed'}`)
+    } finally {
+      setExecuting(false)
+    }
   }
 
   if (!device) return <div className="p-6 text-gray-500">Loading...</div>
@@ -162,48 +172,72 @@ export default function DeviceDetail() {
 
       {tab === 'cli' && (
         <div className="space-y-4">
-          {/* Quick command buttons */}
-          <div className="flex flex-wrap gap-1.5">
-            {[
-              'show version', 'show ip interface brief', 'show interfaces',
-              'show cdp neighbors', 'show cdp neighbors detail', 'show lldp neighbors',
-              'show inventory', 'show running-config', 'show logging',
-              'show ip route', 'show mac address-table', 'show vlan brief',
-            ].map(cmd => (
-              <button
-                key={cmd}
-                onClick={() => { setCommand(cmd); }}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors border ${
-                  command === cmd
-                    ? 'bg-cyan-600/20 border-cyan-500 text-cyan-400'
-                    : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:bg-gray-800 hover:text-gray-200'
-                }`}
-              >
-                {cmd}
-              </button>
-            ))}
-          </div>
-
-          {/* Command input + execute */}
+          {/* Command selector + execute */}
           <div className="flex gap-2">
-            <input
-              type="text"
+            <select
               value={command}
-              onChange={e => setCommand(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && runCommand()}
-              placeholder="Enter command or click one above"
-              className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm font-mono focus:border-cyan-500 focus:outline-none"
-            />
-            <button onClick={runCommand} className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg text-sm">
-              Execute
+              onChange={e => { setCommand(e.target.value); setOutput(''); }}
+              className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-sm font-mono focus:border-cyan-500 focus:outline-none"
+            >
+              <option value="">Select a command...</option>
+              <optgroup label="Common">
+                <option value="show version">show version</option>
+                <option value="show ip interface brief">show ip interface brief</option>
+                <option value="show interfaces">show interfaces</option>
+                <option value="show cdp neighbors">show cdp neighbors</option>
+                <option value="show cdp neighbors detail">show cdp neighbors detail</option>
+                <option value="show lldp neighbors">show lldp neighbors</option>
+                <option value="show inventory">show inventory</option>
+              </optgroup>
+              <optgroup label="Configuration">
+                <option value="show running-config">show running-config</option>
+                <option value="show startup-config">show startup-config</option>
+              </optgroup>
+              <optgroup label="Routing & Switching">
+                <option value="show ip route">show ip route</option>
+                <option value="show ip bgp summary">show ip bgp summary</option>
+                <option value="show ip ospf neighbor">show ip ospf neighbor</option>
+                <option value="show mac address-table">show mac address-table</option>
+                <option value="show vlan brief">show vlan brief</option>
+                <option value="show spanning-tree">show spanning-tree</option>
+              </optgroup>
+              <optgroup label="System">
+                <option value="show logging">show logging</option>
+                <option value="show processes cpu">show processes cpu</option>
+                <option value="show environment">show environment</option>
+              </optgroup>
+            </select>
+            <button
+              onClick={runCommand}
+              disabled={!command || executing}
+              className="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+            >
+              {executing ? 'Running...' : 'Execute'}
             </button>
           </div>
 
           {/* Output */}
           {output && (
-            <pre className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-sm font-mono text-green-400 overflow-auto max-h-[600px] whitespace-pre">
-              {output}
-            </pre>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-gray-400 font-mono">{device.hostname}# {command}</span>
+                <button
+                  onClick={() => navigator.clipboard.writeText(output)}
+                  className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                >
+                  Copy
+                </button>
+              </div>
+              <pre className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-sm font-mono text-green-400 overflow-auto max-h-[600px] whitespace-pre">
+                {output}
+              </pre>
+            </div>
+          )}
+
+          {!output && command && !executing && (
+            <div className="text-center text-gray-500 text-sm py-12">
+              Click Execute to run <span className="font-mono text-cyan-400">{command}</span> on {device.hostname}
+            </div>
           )}
         </div>
       )}
