@@ -16,6 +16,4 @@ RUN mkdir -p /app/data
 
 EXPOSE 8000
 
-RUN chmod +x start.sh
-
-CMD ["./start.sh"]
+CMD ["bash", "-c", "alembic upgrade head && python -m snep.seed; uvicorn snep.api.app:app --host 0.0.0.0 --port ${PORT:-8000}"]
