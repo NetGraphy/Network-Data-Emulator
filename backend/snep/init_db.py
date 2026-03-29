@@ -29,6 +29,13 @@ async def init():
     except Exception as e:
         print(f"Warning: Seed failed (may already be seeded): {e}")
 
+    print("Running CLI library seed...")
+    try:
+        from snep.seed_cli_library import main as seed_cli_main
+        await seed_cli_main()
+    except Exception as e:
+        print(f"Warning: CLI library seed failed: {e}")
+
 
 if __name__ == "__main__":
     asyncio.run(init())

@@ -1,0 +1,905 @@
+################################################################################
+# Real-World Cisco CLI Output Reference Samples
+#
+# Collected from Cisco documentation, network engineering blogs, community
+# forums, and lab environments. These outputs serve as ground truth for
+# validating that SNEP's Jinja2 templates produce output structurally
+# identical to real devices, capable of passing through TextFSM, Genie,
+# and NTC-Templates parsers.
+#
+# Sources:
+#   - wannabelab.blogspot.com (Cisco lab blog)
+#   - netstuts.com (Cisco command reference)
+#   - networkstraining.com (Cisco training)
+#   - networklessons.com (CCNP training)
+#   - packetswitch.co.uk (Cisco 9300 upgrade blog)
+#   - italchemy.wordpress.com (ASR 1001-X upgrade blog)
+#   - GitHub Gist: Cisco IOS show inventory outputs
+#   - study-ccna.com (CCNA training)
+#   - Cisco official documentation
+################################################################################
+
+
+================================================================================
+SAMPLE 1: Cisco Catalyst 9300-48T - IOS-XE 17.06.03 (show version)
+Source: wannabelab.blogspot.com/2023/03/cisco-catalyst-9300-ios-xe-upgrade.html
+================================================================================
+
+Switch#show version
+Cisco IOS XE Software, Version 17.06.03
+Cisco IOS Software [Bengaluru], Catalyst L3 Switch Software (CAT9K_IOSXE), Version 17.6.3, RELEASE SOFTWARE (fc4)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2022 by Cisco Systems, Inc.
+Compiled Wed 30-Mar-22 23:09 by mcpre
+
+
+Cisco IOS-XE software, Copyright (c) 2005-2022 by cisco Systems, Inc.
+All rights reserved.  Certain components of Cisco IOS-XE software are
+licensed under the GNU General Public License ("GPL") Version 2.0.  The
+software code licensed under GPL Version 2.0 is free software that comes
+with ABSOLUTELY NO WARRANTY.  You can redistribute and/or modify such
+GPL code under the terms of GPL Version 2.0.  For more details, see the
+documentation or "License Notice" file accompanying the IOS-XE software,
+or the applicable URL provided on the flyer accompanying the IOS-XE
+software.
+
+
+ROM: IOS-XE ROMMON
+BOOTLDR: System Bootstrap, Version 17.6.1r[FC2], RELEASE SOFTWARE (P)
+
+Switch uptime is 1 hour, 5 minutes
+Uptime for this control processor is 1 hour, 8 minutes
+System returned to ROM by PowerOn
+System image file is "flash:packages.conf"
+Last reload reason: PowerOn
+
+
+This product contains cryptographic features and is subject to United
+States and local country laws governing import, export, transfer and
+use. Delivery of Cisco cryptographic products does not imply
+third-party authority to import, export, distribute or use encryption.
+Importers, exporters, distributors and users are responsible for
+compliance with U.S. and local country laws. By using this product you
+agree to comply with applicable laws and regulations. If you are unable
+to comply with U.S. and local laws, return this product immediately.
+
+A summary of U.S. laws governing Cisco cryptographic products may be found at:
+http://www.cisco.com/wwl/export/crypto/tool/stqrg.html
+
+If you require further assistance please contact us by sending email to
+export@cisco.com.
+
+
+Technology Package License Information:
+
+-----------------------------------------------------------------
+Technology-package                   Technology-package
+Current                        Type                  Next reboot
+-----------------------------------------------------------------
+network-essentials      Smart License            network-essentials
+dna-essentials          Subscription Smart License       dna-essentials
+AIR License Level: AIR DNA Advantage
+Next reload AIR license Level: AIR DNA Advantage
+
+
+Smart Licensing Status: Registration Not Applicable/Not Applicable
+
+cisco C9300-48T (X86) processor with 1317232K/6147K bytes of memory.
+Processor board ID FOC26241234
+1 Virtual Ethernet interface
+52 Gigabit Ethernet interfaces
+8 Ten Gigabit Ethernet interfaces
+2 TwentyFive Gigabit Ethernet interfaces
+2 Forty Gigabit Ethernet interfaces
+2048K bytes of non-volatile configuration memory.
+8388608K bytes of physical memory.
+1638400K bytes of Crash Files at crashinfo:.
+11264000K bytes of Flash at flash:.
+1974239K bytes of USB Flash at usbflash0:.
+
+Base Ethernet MAC Address          : f8:e5:7e:a9:12:34
+Motherboard Assembly Number        : 73-19915-04
+Motherboard Serial Number          : FOC26215678
+Model Revision Number              : H0
+Motherboard Revision Number        : B0
+Model Number                       : C9300-48T
+System Serial Number               : FOC26241234
+CLEI Code Number                   :
+
+
+Switch Ports Model              SW Version        SW Image              Mode
+------ ----- -----              ----------        ----------            ----
+*    1 65    C9300-48T          17.06.03          CAT9K_IOSXE           INSTALL
+
+
+================================================================================
+SAMPLE 2: Cisco Catalyst 9300-48P - IOS-XE 16.12.04 (show version)
+Source: packetswitch.co.uk/cisco-9300/
+================================================================================
+
+switch#show version
+Cisco IOS XE Software, Version 16.12.04
+Cisco IOS Software [Gibraltar], Catalyst L3 Switch Software (CAT9K_IOSXE),
+Version 16.12.4, RELEASE SOFTWARE (fc5)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2020 by Cisco Systems, Inc.
+Compiled Thu 09-Jul-20 21:49 by mcpre
+
+Cisco IOS-XE software, Copyright (c) 2005-2020 by cisco Systems, Inc.
+All rights reserved. Certain components of Cisco IOS-XE software are
+licensed under the GNU General Public License ("GPL") Version 2.0.
+
+ROM: IOS-XE ROMMON
+BOOTLDR: System Bootstrap, Version 16.12.2r, RELEASE SOFTWARE (P)
+
+switch uptime is 1 minute
+Uptime for this control processor is 2 minutes
+System returned to ROM by PowerOn at 16:50:16 UTC Wed Feb 7 2018
+System image file is "flash:packages.conf"
+Last reload reason: PowerOn
+
+
+================================================================================
+SAMPLE 3: Cisco ISR 4331/K9 - IOS-XE 03.13.06a.S / 15.4(3)S6a (show version)
+Source: wannabelab.blogspot.com/2017/02/cisco-4331-router-ios-and-license.html
+================================================================================
+
+Router#show version
+Cisco IOS XE Software, Version 03.13.06a.S - Extended Support Release
+Cisco IOS Software, ISR Software (X86_64_LINUX_IOSD-UNIVERSALK9-M), Version 15.4(3)S6a, RELEASE SOFTWARE (fc2)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2016 by Cisco Systems, Inc.
+
+Cisco IOS-XE software, Copyright (c) 2005-2016 by cisco Systems, Inc.
+All rights reserved. Certain components of Cisco IOS-XE software are
+licensed under the GNU General Public License ("GPL") Version 2.0.
+
+ROM: IOS-XE ROMMON
+
+Router uptime is 1 minute
+Uptime for this control processor is 2 minutes
+System image file is "bootflash:isr4300-universalk9.03.13.06a.S.154-3.S6a-ext.SPA.bin"
+Last reload reason: Reload Command
+
+cisco ISR4331/K9 (1RU) processor with 1655569K/6147K bytes of memory.
+Processor board ID FDO2012A123
+3 Gigabit Ethernet interfaces
+32768K bytes of non-volatile configuration memory.
+4194304K bytes of physical memory.
+3223551K bytes of flash memory at bootflash:.
+
+Configuration register is 0x2102
+
+
+================================================================================
+SAMPLE 4: Cisco ISR 4331/K9 - IOS-XE 16.09.06 (show version)
+Source: stonelee2005.github.io (ISR 4K upgrade blog)
+================================================================================
+
+Router#show version
+Cisco IOS XE Software, Version 16.09.06
+Cisco IOS Software [Fuji], ISR Software (X86_64_LINUX_IOSD-UNIVERSALK9-M), Version 16.9.6, RELEASE SOFTWARE (fc2)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2019 by Cisco Systems, Inc.
+Compiled Sun 15-Sep-19 08:02 by mcpre
+
+Cisco IOS-XE software, Copyright (c) 2005-2019 by cisco Systems, Inc.
+All rights reserved. Certain components of Cisco IOS-XE software are
+licensed under the GNU General Public License ("GPL") Version 2.0.
+
+ROM: IOS-XE ROMMON
+BOOTLDR: System Bootstrap, Version 16.7(3r), RELEASE SOFTWARE (P)
+
+Router uptime is 2 days, 14 hours, 37 minutes
+Uptime for this control processor is 2 days, 14 hours, 39 minutes
+System returned to ROM by Reload Command
+System image file is "bootflash:isr4300-universalk9.16.09.06.SPA.bin"
+Last reload reason: Reload Command
+
+
+This product contains cryptographic features and is subject to United
+States and local country laws governing import, export, transfer and
+use. Delivery of Cisco cryptographic products does not imply
+third-party authority to import, export, distribute or use encryption.
+Importers, exporters, distributors and users are responsible for
+compliance with U.S. and local country laws. By using this product you
+agree to comply with applicable laws and regulations. If you are unable
+to comply with U.S. and local laws, return this product immediately.
+
+A summary of U.S. laws governing Cisco cryptographic products may be found at:
+http://www.cisco.com/wwl/export/crypto/tool/stqrg.html
+
+If you require further assistance please contact us by sending email to
+export@cisco.com.
+
+
+Technology Package License Information:
+
+-----------------------------------------------------------------
+Technology-package                   Technology-package
+Current                        Type                  Next reboot
+-----------------------------------------------------------------
+appxk9           Smart License                    appxk9
+uck9             None                             None
+securityk9       Smart License                    securityk9
+ipbase           Smart License                    ipbase
+
+cisco ISR4331/K9 (1RU) processor with 1647578K/6147K bytes of memory.
+Processor board ID FGL213722RX
+3 Gigabit Ethernet interfaces
+2 Serial interfaces
+32768K bytes of non-volatile configuration memory.
+4194304K bytes of physical memory.
+3223551K bytes of flash memory at bootflash:.
+978928K bytes of USB flash at usb0:.
+
+Configuration register is 0x2102
+
+
+================================================================================
+SAMPLE 5: Cisco ASR 1001-X - IOS-XE 16.09.03 (show version)
+Source: wannabelab.blogspot.com/2021/11/cisco-asr1001-x-licensing.html
+================================================================================
+
+ASR1K#show version
+Cisco IOS XE Software, Version 16.09.03
+Cisco IOS Software [Fuji], ASR1000 Software (X86_64_LINUX_IOSD-UNIVERSALK9-M), Version 16.9.3, RELEASE SOFTWARE (fc2)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2019 by Cisco Systems, Inc.
+Compiled Wed 20-Mar-19 08:02 by mcpre
+
+ROM: IOS-XE ROMMON
+ASR1K uptime is 33 minutes
+Uptime for this control processor is 35 minutes
+System returned to ROM by Reload Command
+System image file is "bootflash:asr1001x-universalk9.16.09.03.SPA.bin"
+Last reload reason: Reload Command
+
+License Type: Default. No valid license found.
+License Level: ipbase
+Next reload license Level: ipbase
+The current throughput level is 2500000 kbps
+Smart Licensing Status: Smart Licensing is DISABLED
+
+cisco ASR1001-X (1NG) processor (revision 1NG) with 3853454K/6147K bytes of memory.
+Processor board ID FXS22505678
+6 Gigabit Ethernet interfaces
+2 Ten Gigabit Ethernet interfaces
+32768K bytes of non-volatile configuration memory.
+8388608K bytes of physical memory.
+6594559K bytes of eUSB flash at bootflash:.
+1974239K bytes of USB flash at usb1:.
+0K bytes of WebUI ODM Files at webui:.
+Configuration register is 0x2102
+
+
+================================================================================
+SAMPLE 6: Cisco ASR 1001-X - IOS-XE 16.12.07 (show version)
+Source: italchemy.wordpress.com/2022/07/22/cisco-asr-1001-x-router-upgrade
+================================================================================
+
+Router#show ver
+Cisco IOS XE Software, Version 16.12.07
+Cisco IOS Software [Gibraltar], ASR1000 Software (X86_64_LINUX_IOSD-UNIVERSALK9-M),
+Version 16.12.7, RELEASE SOFTWARE (fc2)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2022 by Cisco Systems, Inc.
+Compiled Wed 02-Feb-22 11:12 by mcpre
+
+Cisco IOS-XE software, Copyright (c) 2005-2022 by cisco Systems, Inc.
+All rights reserved. Certain components of Cisco IOS-XE software are
+licensed under the GNU General Public License ("GPL") Version 2.0.
+
+ROM: 16.9(4r)
+
+Router uptime is 1 minute
+Uptime for this control processor is 4 minutes
+System returned to ROM by Reload Command
+System image file is "bootflash:/asr1001x-universalk9.16.12.07.SPA.bin"
+Last reload reason: Reload Command
+
+License Type: Smart License is permanent
+License Level: ipbase
+Next reload license Level: ipbase
+The current throughput level is 2500000 kbps
+
+Smart Licensing Status: UNREGISTERED/No Licenses in Use
+
+cisco ASR1001-X (1NG) processor (revision 1NG) with 3765096K/6147K bytes of memory.
+Processor board ID FXS2308Q3EK
+6 Gigabit Ethernet interfaces
+2 Ten Gigabit Ethernet interfaces
+32768K bytes of non-volatile configuration memory.
+8388608K bytes of physical memory.
+6070271K bytes of eUSB flash at bootflash:.
+0K bytes of WebUI ODM Files at webui:.
+
+Configuration register is 0x2102
+
+
+================================================================================
+SAMPLE 7: Cisco ASR 1001-X - IOS-XE 03.13.03.S / 15.4(3)S3 (show version)
+Source: wannabelab.blogspot.com/2021/10/cisco-asr-1001-x-ios-xe-3x-to-16x.html
+================================================================================
+
+ASR1K#show version
+Cisco IOS XE Software, Version 03.13.03.S - Extended Support Release
+Cisco IOS Software, ASR1000 Software (X86_LINUX_IOSD-UNIVERSALK9-M), Version 15.4(3)S3, RELEASE SOFTWARE (fc1)
+
+ROM: IOS-XE ROMMON
+System image file is "bootflash:/asr1001x-universalk9.03.13.03.S.154-3.S3-ext.SPA.bin"
+cisco ASR1001-X (1NG) processor (revision 1NG) with 6823656K/6147K bytes of memory.
+Processor board ID FXS18351234
+6 Gigabit Ethernet interfaces
+2 Ten Gigabit Ethernet interfaces
+Configuration register is 0x2102
+
+
+================================================================================
+SAMPLE 8: Cisco Catalyst 2960X - IOS 15.2(7)E1 (show version)
+Source: netstuts.com/show-version
+================================================================================
+
+Switch#show version
+Cisco IOS Software, C2960X Software (C2960X-UNIVERSALK9-M), Version 15.2(7)E1
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2019 by Cisco Systems, Inc.
+Compiled Thu 03-Oct-19 09:49 by prod_rel_team
+
+ROM: Bootstrap program is C2960X boot loader
+BOOTLDR: C2960X Boot Loader (C2960X-HBOOT-M) Version 15.2(7r)E1
+
+Switch uptime is 34 weeks, 2 days, 5 hours, 17 minutes
+System returned to ROM by power-on
+
+System image file is "flash:c2960x-universalk9-mz.152-7.E1.bin"
+
+Processor board ID FOC2141Y23P
+Last reload type: Normal Reload
+
+cisco WS-C2960X-48FPS-L (APM86XXX) processor (revision V01)
+with 524288K bytes of memory.
+2048K bytes of flash-simulated non-volatile configuration memory.
+
+Base ethernet MAC Address       : A8:9D:21:FE:BC:00
+Motherboard assembly number     : 73-16169-06
+Power supply part number        : 341-0543-01
+Motherboard serial number       : FOC21411YRL
+Power supply serial number      : POG21431VXT
+
+Model revision number           : V01
+Motherboard revision number     : A0
+Model number                    : WS-C2960X-48FPS-L
+System serial number            : FOC2141Y23P
+
+        48 FastEthernet interfaces
+         4 Gigabit Ethernet interfaces
+         2 Ten Gigabit Ethernet interfaces
+
+Configuration register is 0x102
+
+
+================================================================================
+SAMPLE 9: Cisco Catalyst 2960 - IOS 15.0(2)SE4 (show version)
+Source: study-ccna.com/show-version-command/
+================================================================================
+
+SW1#show version
+Cisco IOS Software, C2960 Software (C2960-LANBASEK9-M), Version 15.0(2)SE4, RELEASE SOFTWARE (fc1)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2013 by Cisco Systems, Inc.
+Compiled Wed 26-Jun-13 02:49 by mnguyen
+
+ROM: Bootstrap program is C2960 boot loader
+BOOTLDR: C2960 Boot Loader (C2960-HBOOT-M) Version 12.2(25r)FX, RELEASE SOFTWARE (fc4)
+
+Switch uptime is 39 minutes
+System returned to ROM by power-on
+System image file is "flash:c2960-lanbasek9-mz.150-2.SE4.bin"
+
+This product contains cryptographic features and is subject to United
+States and local country laws governing import, export, transfer and
+use. Delivery of Cisco cryptographic products does not imply
+third-party authority to import, export, distribute or use encryption.
+Importers, exporters, distributors and users are responsible for
+compliance with U.S. and local country laws. By using this product you
+agree to comply with applicable laws and regulations. If you are unable
+to comply with U.S. and local laws, return this product immediately.
+
+A summary of U.S. laws governing Cisco cryptographic products may be found at:
+http://www.cisco.com/wwl/export/crypto/tool/stqrg.html
+
+If you require further assistance please contact us by sending email to
+export@cisco.com.
+
+cisco WS-C2960-24TT-L (PowerPC405) processor (revision B0) with 65536K bytes of memory.
+Processor board ID FOC1010X104
+Last reset from power-on
+1 Virtual Ethernet interface
+24 FastEthernet interfaces
+2 Gigabit Ethernet interfaces
+The password-recovery mechanism is enabled.
+
+64K bytes of flash-simulated non-volatile configuration memory.
+Base ethernet MAC Address : 00:17:59:A7:51:80
+Motherboard assembly number : 73-10390-03
+Power supply part number : 341-0097-02
+Motherboard serial number : FOC10093R12
+Power supply serial number : AZS1007032H
+Model revision number : B0
+Motherboard revision number : B0
+Model number : WS-C2960-24TT-L
+System serial number : FOC1010X104
+Top Assembly Part Number : 800-27221-02
+Top Assembly Revision Number : A0
+Version ID : V02
+CLEI Code Number : COM3L00BRA
+Hardware Board Revision Number : 0x01
+
+Switch Ports Model         SW Version SW Image
+------ ----- -----         ---------- ----------
+*    1 26    WS-C2960-24TT-L 15.0(2)SE4 C2960-LANBASEK9-M
+
+Configuration register is 0xF
+
+
+================================================================================
+SAMPLE 10: Cisco Catalyst 9300-48P - IOS-XE 16.12.4 (show version, partial)
+Source: netstuts.com/show-version
+================================================================================
+
+Cisco IOS XE Software, Version 16.12.04
+Cisco IOS Software [Gibraltar], Catalyst L3 Switch Software
+(CAT9K_IOSXE), Version 16.12.4, RELEASE SOFTWARE (fc5)
+
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2020 by Cisco Systems, Inc.
+
+cisco C9300-48P (X86) processor with 1414933K/6147K bytes of memory.
+Processor board ID FCW2312G07E
+2048K bytes of non-volatile configuration memory.
+8388608K bytes of physical memory.
+1638400K bytes of Crashinfo at crashinfo:.
+11264000K bytes of Flash at flash:.
+
+License Information for Module:'chassis 1'
+  License Level: network-essentials
+  License Type: Permanent Right-To-Use
+  Next reload license Level: network-essentials
+
+The current throughput level is 250000 kbps
+
+Configuration register is 0x102
+
+
+================================================================================
+SAMPLE 11: show ip interface brief
+Source: netstuts.com/show-ip-interface-brief
+================================================================================
+
+Router#show ip interface brief
+Interface              IP-Address      OK? Method Status                Protocol
+GigabitEthernet0/0     192.168.1.1     YES manual up                    up
+GigabitEthernet0/1     unassigned      YES unset  administratively down down
+GigabitEthernet0/2     10.0.0.1        YES manual up                    down
+GigabitEthernet0/3     172.16.5.1      YES manual down                  down
+Serial0/0/0            10.10.10.1      YES manual up                    up
+Loopback0              172.16.1.1      YES manual up                    up
+Vlan1                  192.168.10.1    YES manual up                    up
+
+
+================================================================================
+SAMPLE 12: show cdp neighbors
+Source: netstuts.com/show-cdp-neighbors
+================================================================================
+
+Switch#show cdp neighbors
+Capability Codes: R - Router, T - Trans Bridge, B - Source Route Bridge
+                  S - Switch, H - Host, I - IGMP, r - Repeater, P - Phone,
+                  D - Remote, C - CVTA, M - Two-port Mac Relay
+
+Device ID        Local Intrfce     Holdtme    Capability  Platform  Port ID
+SwitchB          Gig 0/1           122         S I        WS-C2960  Gig 0/2
+RouterA          Gig 0/2           132         R S I      ISR4331   Gig 0/0
+IPPhone1         Gig 0/3           170         P          CP-7960   Port 1
+
+
+================================================================================
+SAMPLE 13: show cdp neighbors (multi-switch topology)
+Source: netstuts.com/show-cdp-neighbors
+================================================================================
+
+SW1#show cdp neighbors
+Capability Codes: R - Router, T - Trans Bridge, B - Source Route Bridge
+                  S - Switch, H - Host, I - IGMP, r - Repeater, P - Phone,
+                  D - Remote, C - CVTA, M - Two-port Mac Relay
+
+Device ID        Local Intrfce     Holdtme    Capability  Platform  Port ID
+SW2              Gig 0/1           150         S I        WS-C3750  Gig 0/1
+SW3              Gig 0/2           140         S I        WS-C2960  Gig 0/1
+
+
+================================================================================
+SAMPLE 14: show interfaces - FastEthernet (Switch)
+Source: networkstraining.com/cisco-show-interface-command/
+================================================================================
+
+FastEthernet0/1 is up, line protocol is up (connected)
+  Hardware is Lance, address is 000b.be66.0b01 (bia 000b.be66.0b01)
+ BW 100000 Kbit, DLY 1000 usec,
+     reliability 255/255, txload 1/255, rxload 1/255
+  Encapsulation ARPA, loopback not set
+  Keepalive set (10 sec)
+  Full-duplex, 100Mb/s
+  input flow-control is off, output flow-control is off
+  ARP type: ARPA, ARP Timeout 04:00:00
+  Last input 00:00:08, output 00:00:05, output hang never
+  Last clearing of "show interface" counters never
+  Input queue: 0/75/0/0 (size/max/drops/flushes); Total output drops: 0
+  Queueing strategy: fifo
+  Output queue :0/40 (size/max)
+  5 minute input rate 0 bits/sec, 0 packets/sec
+  5 minute output rate 0 bits/sec, 0 packets/sec
+     956 packets input, 193351 bytes, 0 no buffer
+     Received 956 broadcasts, 0 runts, 0 giants, 0 throttles
+     0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored, 0 abort
+     0 watchdog, 0 multicast, 0 pause input
+     0 input packets with dribble condition detected
+     2357 packets output, 263570 bytes, 0 underruns
+     0 output errors, 0 collisions, 10 interface resets
+     0 babbles, 0 late collision, 0 deferred
+     0 lost carrier, 0 no carrier
+     0 output buffer failures, 0 output buffers swapped out
+
+
+================================================================================
+SAMPLE 15: show interfaces - GigabitEthernet (Router)
+Source: networkstraining.com/cisco-show-interface-command/
+================================================================================
+
+GigabitEthernet0/0 is up, line protocol is up (connected)
+  Hardware is CN Gigabit Ethernet, address is 00e0.f9d3.3d01 (bia 00e0.f9d3.3d01)
+  Internet address is 192.168.1.254/24
+  MTU 1500 bytes, BW 1000000 Kbit, DLY 100 usec,
+     reliability 255/255, txload 1/255, rxload 1/255
+  Encapsulation ARPA, loopback not set
+  Keepalive set (10 sec)
+  Full-duplex, 100Mb/s, media type is RJ45
+  output flow-control is unsupported, input flow-control is unsupported
+  ARP type: ARPA, ARP Timeout 04:00:00,
+  Last input 00:00:08, output 00:00:05, output hang never
+  Last clearing of "show interface" counters never
+  Input queue: 0/75/0 (size/max/drops); Total output drops: 0
+  Queueing strategy: fifo
+  Output queue :0/40 (size/max)
+  5 minute input rate 1017 bits/sec, 0 packets/sec
+  5 minute output rate 1017 bits/sec, 0 packets/sec
+     886 packets input, 113108 bytes, 0 no buffer
+     Received 0 broadcasts, 0 runts, 0 giants, 0 throttles
+     0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored, 0 abort
+     0 watchdog, 1017 multicast, 0 pause input
+     0 input packets with dribble condition detected
+     886 packets output, 113108 bytes, 0 underruns
+     0 output errors, 0 collisions, 1 interface resets
+     0 unknown protocol drops
+     0 babbles, 0 late collision, 0 deferred
+     0 lost carrier, 0 no carrier
+     0 output buffer failures, 0 output buffers swapped out
+
+
+================================================================================
+SAMPLE 16: show interfaces - FastEthernet0/0 (Router, from networklessons.com)
+Source: networklessons.com/cisco/ccnp-tshoot/cisco-ios-show-interface-explained
+================================================================================
+
+R1#show interfaces FastEthernet 0/0
+FastEthernet0/0 is up, line protocol is up
+  Hardware is Gt96k FE, address is c201.1d00.0000 (bia c201.1d00.0000)
+  MTU 1500 bytes, BW 100000 Kbit/sec, DLY 1000 usec,
+     reliability 255/255, txload 1/255, rxload 1/255
+  Encapsulation ARPA, loopback not set
+  Keepalive set (10 sec)
+  Full-duplex, 100Mb/s, 100BaseTX/FX
+  ARP type: ARPA, ARP Timeout 04:00:00
+  Last input never, output 00:00:02, output hang never
+  Last clearing of "show interface" counters never
+  Input queue: 0/75/0/0 (size/max/drops/flushes); Total output drops: 0
+  Queueing strategy: fifo
+  Output queue: 0/40 (size/max)
+  5 minute input rate 0 bits/sec, 0 packets/sec
+  5 minute output rate 0 bits/sec, 0 packets/sec
+     0 packets input, 0 bytes
+     Received 0 broadcasts, 0 runts, 0 giants, 0 throttles
+     0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored
+     0 watchdog
+     0 input packets with dribble condition detected
+     2 packets output, 403 bytes, 0 underruns
+     0 output errors, 0 collisions, 1 interface resets
+     0 unknown protocol drops
+     0 babbles, 0 late collision, 0 deferred
+     0 lost carrier, 0 no carrier
+     0 output buffer failures, 0 output buffers swapped out
+
+
+================================================================================
+SAMPLE 17: show inventory - ISR 4331/K9
+Source: GitHub Gist (Cisco IOS show inventory outputs)
+================================================================================
+
+Router#show inventory
+NAME: "Chassis", DESCR: "Cisco ISR4331 Chassis"
+PID: ISR4331/K9        , VID: V01, SN: FD123456678
+
+NAME: "Power Supply Module 0", DESCR: "250W AC Power Supply for Cisco ISR 4330"
+PID: PWR-4330-AC       , VID: V01, SN: PST1832N0TG
+
+NAME: "Fan Tray", DESCR: "Cisco ISR4330 Fan Assembly"
+PID: ACS-4330-FANASSY  , VID:    , SN:
+
+NAME: "module 0", DESCR: "Cisco ISR4331 Built-In NIM controller"
+PID: ISR4331/K9        , VID:    , SN:
+
+NAME: "NIM subslot 0/0", DESCR: "Front Panel 3 ports Gigabitethernet Module"
+PID: ISR4331-3x1GE     , VID: V01, SN: JAB092709EL
+
+NAME: "subslot 0/0 transceiver 2", DESCR: "GE T"
+PID: ABCU-5710RZ-CS2   , VID:    , SN: AGM113729JM
+
+NAME: "module 1", DESCR: "Cisco ISR4331 Built-In SM controller"
+PID: ISR4331/K9        , VID:    , SN:
+
+NAME: "module R0", DESCR: "Cisco ISR4331 Route Processor"
+PID: ISR4331/K9        , VID: V01, SN: FDO18420SS1
+
+NAME: "module F0", DESCR: "Cisco ISR4331 Forwarding Processor"
+PID: ISR4331/K9        , VID:    , SN:
+
+
+================================================================================
+SAMPLE 18: show inventory - ISR 4431/K9
+Source: GitHub Gist (Cisco IOS show inventory outputs)
+================================================================================
+
+Router#show inventory
+NAME: "Chassis", DESCR: "Cisco ISR4431 Chassis"
+PID: ISR4431/K9        , VID: V01, SN: FJC1234547788
+
+NAME: "Power Supply Module 1", DESCR: "250W AC Power Supply for Cisco ISR4430"
+PID: PWR-4430-AC       , VID: V01, SN: LIT19280KN5
+
+NAME: "Fan Tray", DESCR: "Cisco ISR4430 Fan Assembly"
+PID: ACS-4430-FANASSY  , VID:    , SN:
+
+NAME: "module 0", DESCR: "Cisco ISR4431 Built-In NIM controller"
+PID: ISR4431/K9        , VID:    , SN:
+
+NAME: "NIM subslot 0/0", DESCR: "Front Panel 4 ports Gigabitethernet Module"
+PID: ISR4431-X-4x1GE   , VID: V01, SN: JAB092709EL
+
+NAME: "module R0", DESCR: "Cisco ISR4431 Route Processor"
+PID: ISR4431/K9        , VID: V01, SN: FOC19352R20
+
+NAME: "module F0", DESCR: "Cisco ISR4431 Forwarding Processor"
+PID: ISR4431/K9        , VID:    , SN:
+
+
+================================================================================
+SAMPLE 19: show inventory - WS-C3850-48XS
+Source: GitHub Gist (Cisco IOS show inventory outputs)
+================================================================================
+
+Switch#show inventory
+NAME: "c38xx Stack", DESCR: "c38xx Stack"
+PID: WS-C3850-48XS     , VID: V01 , SN: FOC123456789
+
+NAME: "Switch 1", DESCR: "WS-C3850-48XS-E"
+PID: WS-C3850-48XS-E   , VID: V01 , SN: FOC1924V03Y
+
+NAME: "Switch 1 - Power Supply A", DESCR: "Switch 1 - Power Supply A"
+PID: PWR-C3-750WAC-F   , VID: 000 , SN: ART1924X29
+
+NAME: "Switch 1 - Power Supply B", DESCR: "Switch 1 - Power Supply B"
+PID: PWR-C3-750WAC-F   , VID: 000 , SN: ART1924X29
+
+NAME: "Te1/0/1", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: AVD2014A1GV
+
+NAME: "Te1/0/2", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: AVD2014A1GF
+
+NAME: "Te1/0/3", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: AVD2014A1GY
+
+NAME: "Te1/0/4", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: AVD2014A1ES
+
+NAME: "Te1/0/5", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: AVD2014A1F5
+
+NAME: "Te1/0/6", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: AVD2014A1F0
+
+NAME: "Te1/0/10", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: AVD2014AAP9
+
+NAME: "Te1/0/11", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: AVD2014AAPM
+
+NAME: "Te1/0/12", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: AVD2014A1G8
+
+NAME: "Te1/0/13", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: AVD2018A41R
+
+NAME: "Te1/0/15", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: AVD2014A1EL
+
+NAME: "Te1/0/16", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: AVD2014AAPV
+
+NAME: "Te1/0/20", DESCR: "10/100/1000BaseTX SFP"
+PID:                    , VID:     , SN: AGM202349YW
+
+NAME: "Te1/0/46", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: AVD2039ADFK
+
+NAME: "Te1/0/47", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: FNS20221E27
+
+NAME: "Te1/0/48", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: AVD2014A1H1
+
+
+================================================================================
+SAMPLE 20: show inventory - WS-C2960X-48TD-L
+Source: GitHub Gist (Cisco IOS show inventory outputs)
+================================================================================
+
+Switch#show inventory
+NAME: "1", DESCR: "WS-C2960X-48TD-L"
+PID: WS-C2960X-48TD-L  , VID: V05 , SN: 1234567890
+
+NAME: "TenGigabitEthernet1/0/1", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: AVD2014A1GR
+
+NAME: "TenGigabitEthernet1/0/2", DESCR: "SFP-10GBase-SR"
+PID: SFP-10G-SR        , VID: V03 , SN: AVD2014A1FK
+
+
+================================================================================
+SAMPLE 21: show inventory - CISCO2921/K9
+Source: GitHub Gist (Cisco IOS show inventory outputs)
+================================================================================
+
+Router#show inventory
+NAME: "CISCO2921/K9 chassis", DESCR: "CISCO2921/K9 chassis"
+PID: CISCO2921/K9      , VID: V08 , SN: FGL12345678
+
+NAME: "3rd generation two port EM voice interface daughtercard on Slot 0 SubSlot 1", DESCR: "3rd generation two port EM voice interface daughtercard"
+PID: VIC3-2E/M         , VID: V02 , SN: FOC174781WJ
+
+NAME: "PVDM3 DSP DIMM with 32 Channels on Slot 0 SubSlot 4", DESCR: "PVDM3 DSP DIMM with 32 Channels"
+PID: PVDM3-32          , VID: V01 , SN: FOC17164CM8
+
+NAME: "C2921/C2951 AC Power Supply", DESCR: "C2921/C2951 AC Power Supply"
+PID: PWR-2921-51-AC    , VID: V03 , SN: DCA1706K074
+
+
+================================================================================
+SAMPLE 22: show inventory - CSR1000V
+Source: GitHub Gist (Cisco IOS show inventory outputs)
+================================================================================
+
+Router#show inventory
+NAME: "Chassis", DESCR: "Cisco CSR1000V Chassis"
+PID: CSR1000V          , VID: V00 , SN: 9WNXZ5DMDO1
+
+NAME: "module R0", DESCR: "Cisco CSR1000V Route Processor"
+PID: CSR1000V          , VID: V00 , SN: JAB1303001C
+
+NAME: "module F0", DESCR: "Cisco CSR1000V Embedded Services Processor"
+PID: CSR1000V          , VID:     , SN:
+
+
+================================================================================
+SAMPLE 23: show inventory - C9300-48UXM (from Cisco documentation)
+Source: Cisco Command Reference for Catalyst 9300 16.9.x
+================================================================================
+
+Device#show inventory
+NAME: "c93xx Stack", DESCR: "c93xx Stack"
+PID: C9300-48UXM       , VID: P2B , SN: FCW2117G00C
+
+NAME: "Switch 2", DESCR: "C9300-48UXM"
+PID: C9300-48UXM       , VID: P2B , SN: FCW2117G00C
+
+NAME: "Switch 2 - Power Supply A", DESCR: "Switch 2 - Power Supply A"
+PID: PWR-C1-1100WAC    , VID: V02 , SN: LIT211227NZ
+
+NAME: "Switch 2 FRU Uplink Module 1", DESCR: "8x10G Uplink Module"
+PID: C3850-NM-8-10G    , VID: V01 , SN: FOC20153M58
+
+NAME: "Te2/1/1", DESCR: "SFP-10GBase-CX1"
+PID: SFP-H10GB-CU2M    , VID: V02 , SN: TED2132H0SU
+
+NAME: "Te2/1/3", DESCR: "SFP-10GBase-CX1"
+PID: SFP-H10GB-CU2M    , VID: V02 , SN: TED2132H0A8
+
+NAME: "Te2/1/5", DESCR: "SFP-10GBase-CX1"
+PID: SFP-H10GB-CU2M    , VID: V02 , SN: TED2132H1G8
+
+NAME: "usbflash1", DESCR: "usbflash1"
+PID: SSD-120G          , VID: V01 , SN: STP21460FNA
+
+
+================================================================================
+SAMPLE 24: show platform - ASR 1001-X
+Source: wannabelab.blogspot.com/2021/10/cisco-asr-1001-x-ios-xe-3x-to-16x.html
+================================================================================
+
+ASR1K#show platform
+Chassis type: ASR1001-X
+Slot      CPLD Version        Firmware Version
+0         14041015            15.4(2r)S
+R0        14041015            15.4(2r)S
+F0        14041015            15.4(2r)S
+
+
+================================================================================
+NOTES ON KEY FORMAT DIFFERENCES BETWEEN PLATFORMS
+================================================================================
+
+1. CATALYST 9300 (IOS-XE 17.x):
+   - Uses "Switch uptime is" (not "Router uptime is")
+   - Uses "(X86) processor" designation
+   - Has Technology Package License table with Smart License types
+   - System image file typically "flash:packages.conf" in INSTALL mode
+   - Has "Switch Ports Model" table at the end
+   - Includes AIR License Level lines
+   - Uses Bengaluru/Cupertino/Dublin/Amsterdam codenames
+
+2. ISR 4300/4400 (IOS-XE 16.x/17.x):
+   - Uses "Router uptime is"
+   - Uses "(1RU)" processor designation
+   - Has Technology Package License table (appxk9, uck9, securityk9, ipbase)
+   - System image in bootflash: (e.g., "bootflash:isr4300-universalk9.16.09.06.SPA.bin")
+   - Uses Fuji/Gibraltar codenames for 16.x
+   - Memory reported as xxxxK/6147K format
+
+3. ASR 1001-X (IOS-XE 16.x/17.x):
+   - Uses "Router uptime is" OR custom hostname + "uptime is"
+   - Uses "(1NG) processor (revision 1NG)" designation
+   - Has License Type/Level/Throughput lines (not Technology Package table)
+   - System image in bootflash: (e.g., "bootflash:asr1001x-universalk9.16.09.03.SPA.bin")
+   - Includes "The current throughput level is XXXX kbps" line
+   - Has Smart Licensing Status line
+   - Lists eUSB flash and WebUI ODM Files storage
+
+4. CATALYST 3850 (IOS-XE 16.x):
+   - Uses "Switch uptime is"
+   - Has "c38xx Stack" in show inventory
+   - Switch Ports Model table at the end of show version
+   - System image file typically "flash:packages.conf"
+
+5. CATALYST 2960/2960X (IOS 15.x):
+   - Uses classic IOS format (no IOS-XE dual version lines)
+   - Has BOOTLDR line with boot loader version
+   - Lists MAC address and motherboard details
+   - Has "Switch Ports Model" table at end
+   - Configuration register typically 0xF or 0x102
+
+6. show interfaces FORMAT DIFFERENCES:
+   - Switch ports show "(connected)" after "line protocol is up"
+   - Routers show just "line protocol is up" without "(connected)"
+   - Switch ports may show "0 abort" in input errors line
+   - Some outputs show "0 pause input"/"0 pause output"
+   - BW units: some show "Kbit" others "Kbit/sec"
+   - Input queue format varies: "0/75/0/0" vs "0/75/0"
+
+7. show inventory FORMAT:
+   - C9300: Uses "c93xx Stack" as top-level NAME
+   - ISR 4331: Uses "Chassis" as top-level NAME
+   - C3850: Uses "c38xx Stack" as top-level NAME
+   - C2960X: Uses "1" as top-level NAME (switch number)
+   - PID field width varies by device; trailing spaces pad to fixed width
+   - VID/SN may be empty for modules without physical serial numbers
