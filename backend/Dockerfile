@@ -16,4 +16,6 @@ RUN mkdir -p /app/data
 
 EXPOSE 8000
 
-CMD ["uvicorn", "snep.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+RUN chmod +x start.sh
+
+CMD ["./start.sh"]
