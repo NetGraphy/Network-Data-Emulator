@@ -71,8 +71,17 @@ export const diffCLIEntries = (id1: string, id2: string) => api.post(`/cli-libra
 // Platforms (for selectors)
 export const fetchPlatforms = () => api.get('/platforms').then(r => r.data)
 
-// Device Models (for selectors)
+// Device Models (for selectors — cascades from platform)
 export const fetchDeviceModels = (platformId?: string) => {
-  const url = platformId ? `/device-models?filter[platform_id]=${platformId}` : '/device-models'
-  return api.get(url).then(r => r.data)
+  const params = platformId ? { platform_id: platformId } : {}
+  return api.get('/device-models', { params }).then(r => r.data)
 }
+
+// Software Versions (for selectors — cascades from platform)
+export const fetchSoftwareVersions = (platformId?: string) => {
+  const params = platformId ? { platform_id: platformId } : {}
+  return api.get('/software-versions', { params }).then(r => r.data)
+}
+
+// Vendors
+export const fetchVendors = () => api.get('/vendors').then(r => r.data)

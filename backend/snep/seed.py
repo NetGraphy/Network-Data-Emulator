@@ -19,6 +19,8 @@ from snep.models import (
     Link,
     Platform,
     SNMPProfile,
+    SoftwareVersion,
+    Vendor,
 )
 
 NOW = datetime.now(timezone.utc)
@@ -28,6 +30,11 @@ PLATFORM_IOS_ID = uuid.UUID("a1b2c3d4-0001-0001-0001-000000000001")
 PLATFORM_EOS_ID = uuid.UUID("a1b2c3d4-0001-0001-0001-000000000002")
 MODEL_C9300_ID = uuid.UUID("b2c3d4e5-0002-0002-0002-000000000001")
 MODEL_7050_ID = uuid.UUID("b2c3d4e5-0002-0002-0002-000000000002")
+VENDOR_CISCO_ID = uuid.UUID("d1d2d3d4-0001-0001-0001-000000000001")
+VENDOR_ARISTA_ID = uuid.UUID("d1d2d3d4-0001-0001-0001-000000000002")
+SV_IOS_1706_ID = uuid.UUID("e1e2e3e4-0001-0001-0001-000000000001")
+SV_IOS_1609_ID = uuid.UUID("e1e2e3e4-0001-0001-0001-000000000002")
+SV_EOS_432_ID = uuid.UUID("e1e2e3e4-0001-0001-0001-000000000003")
 
 DEVICE_IDS = [uuid.UUID(f"c3d4e5f6-0003-0003-0003-00000000000{i}") for i in range(1, 6)]
 
@@ -210,11 +217,24 @@ async def seed(session: AsyncSession) -> None:
     )
     session.add_all([ios, eos])
 
+    # Vendors
+    cisco = Vendor(id=VENDOR_CISCO_ID, name="Cisco", slug="cisco", url="https://www.cisco.com")
+    arista = Vendor(id=VENDOR_ARISTA_ID, name="Arista Networks", slug="arista", url="https://www.arista.com")
+    session.add_all([cisco, arista])
+
+    # Software Versions
+    sv_ios_1706 = SoftwareVersion(id=SV_IOS_1706_ID, platform_id=PLATFORM_IOS_ID, version_string="17.06.05", major=17, minor=6, patch="05", status="current")
+    sv_ios_1609 = SoftwareVersion(id=SV_IOS_1609_ID, platform_id=PLATFORM_IOS_ID, version_string="16.09.08", major=16, minor=9, patch="08", status="deprecated")
+    sv_eos_432 = SoftwareVersion(id=SV_EOS_432_ID, platform_id=PLATFORM_EOS_ID, version_string="4.32.2F", major=4, minor=32, patch="2F", status="current")
+    session.add_all([sv_ios_1706, sv_ios_1609, sv_eos_432])
+
     # Device Models
     c9300 = DeviceModel(
         id=MODEL_C9300_ID,
         platform_id=PLATFORM_IOS_ID,
+        vendor_id=VENDOR_CISCO_ID,
         name="catalyst_9300_48t",
+        slug="c9300-48t",
         display_name="Cisco Catalyst 9300-48T",
         software_version="17.06.05",
         default_interface_pattern=[
@@ -232,7 +252,9 @@ async def seed(session: AsyncSession) -> None:
     a7050 = DeviceModel(
         id=MODEL_7050_ID,
         platform_id=PLATFORM_EOS_ID,
+        vendor_id=VENDOR_ARISTA_ID,
         name="7050x3_48yc8",
+        slug="7050x3-48yc8",
         display_name="Arista 7050X3-48YC8",
         software_version="4.32.2F",
         default_interface_pattern=[

@@ -11,10 +11,14 @@ from snep.models.scenario import Scenario, ScenarioEvent
 from snep.models.snmp import SNMPProfile
 from snep.models.template import CommandTemplate
 from snep.models.cli_library import CommandOutputLibrary, ParserTemplate
+from snep.models.vendor import Vendor
+from snep.models.software_version import SoftwareVersion
 
 __all__ = [
     "Base",
     "Platform",
+    "Vendor",
+    "SoftwareVersion",
     "DeviceModel",
     "Device",
     "DeviceCredential",

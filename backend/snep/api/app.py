@@ -44,6 +44,7 @@ from snep.api.execute import router as execute_router  # noqa: E402
 from snep.api.imports import router as imports_router  # noqa: E402
 from snep.api.cli_library import router as cli_library_router  # noqa: E402
 from snep.api.device_models import router as device_models_router  # noqa: E402
+from snep.api.software_versions import router as ref_data_router  # noqa: E402
 
 app.include_router(platforms_router, prefix="/api/v1/platforms", tags=["platforms"])
 app.include_router(devices_router, prefix="/api/v1/devices", tags=["devices"])
@@ -57,6 +58,7 @@ app.include_router(execute_router, prefix="/api/v1", tags=["execute"])
 app.include_router(imports_router, prefix="/api/v1/import", tags=["import"])
 app.include_router(cli_library_router, prefix="/api/v1/cli-library", tags=["cli-library"])
 app.include_router(device_models_router, prefix="/api/v1/device-models", tags=["device-models"])
+app.include_router(ref_data_router, prefix="/api/v1", tags=["reference-data"])
 
 
 @app.get("/health")

@@ -15,14 +15,20 @@ class DeviceModel(Base, UUIDMixin, TimestampMixin):
     __table_args__ = (UniqueConstraint("platform_id", "name", name="uq_device_model_platform_name"),)
 
     platform_id: Mapped[str] = mapped_column(UUID(as_uuid=True), ForeignKey("platforms.id", ondelete="CASCADE"))
+    vendor_id: Mapped[str | None] = mapped_column(UUID(as_uuid=True), ForeignKey("vendors.id", ondelete="SET NULL"), nullable=True)
     name: Mapped[str] = mapped_column(String(128))
+    slug: Mapped[str] = mapped_column(String(128), index=True, default="")
     display_name: Mapped[str] = mapped_column(String(256))
+    part_number: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    u_height: Mapped[int] = mapped_column(Integer, default=1)
+    interface_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     software_version: Mapped[str] = mapped_column(String(64))
     default_interface_pattern: Mapped[list] = mapped_column(JSONB, default=list)
     hardware_details: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     # Relationships
     platform: Mapped["Platform"] = relationship(back_populates="device_models")
+    vendor: Mapped["Vendor"] = relationship(back_populates="hardware_models")
     devices: Mapped[list["Device"]] = relationship(back_populates="device_model", cascade="all, delete-orphan")
 
 
@@ -30,6 +36,7 @@ class Device(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "devices"
 
     device_model_id: Mapped[str] = mapped_column(UUID(as_uuid=True), ForeignKey("device_models.id", ondelete="CASCADE"))
+    software_version_id: Mapped[str | None] = mapped_column(UUID(as_uuid=True), ForeignKey("software_versions.id", ondelete="SET NULL"), nullable=True)
     hostname: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     management_ip: Mapped[str | None] = mapped_column(INET, nullable=True)
     serial_number: Mapped[str] = mapped_column(String(32), unique=True)
@@ -42,6 +49,7 @@ class Device(Base, UUIDMixin, TimestampMixin):
 
     # Relationships
     device_model: Mapped["DeviceModel"] = relationship(back_populates="devices")
+    software_version_rel: Mapped["SoftwareVersion"] = relationship()
     interfaces: Mapped[list["Interface"]] = relationship(
         back_populates="device", cascade="all, delete-orphan", order_by="Interface.sort_order"
     )
@@ -71,3 +79,5 @@ from snep.models.connection import ConnectionMapping  # noqa: E402, F401
 from snep.models.interface import Interface  # noqa: E402, F401
 from snep.models.platform import Platform  # noqa: E402, F401
 from snep.models.snmp import SNMPProfile  # noqa: E402, F401
+from snep.models.vendor import Vendor  # noqa: E402, F401
+from snep.models.software_version import SoftwareVersion  # noqa: E402, F401

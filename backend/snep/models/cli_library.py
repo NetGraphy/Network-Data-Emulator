@@ -18,7 +18,7 @@ class CommandOutputLibrary(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "command_output_library"
     __table_args__ = (
         UniqueConstraint(
-            "platform_id", "software_version", "device_model_id", "command",
+            "platform_id", "software_version_id", "device_model_id", "command",
             name="uq_cli_library_entry",
         ),
     )
@@ -29,7 +29,10 @@ class CommandOutputLibrary(Base, UUIDMixin, TimestampMixin):
     device_model_id: Mapped[str | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("device_models.id", ondelete="SET NULL"), nullable=True
     )
-    software_version: Mapped[str] = mapped_column(String(64), index=True)
+    software_version_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("software_versions.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    software_version: Mapped[str] = mapped_column(String(64), index=True)  # denormalized for display
     command: Mapped[str] = mapped_column(String(256), index=True)
     raw_output: Mapped[str] = mapped_column(Text)
 
@@ -61,6 +64,7 @@ class CommandOutputLibrary(Base, UUIDMixin, TimestampMixin):
     # Relationships
     platform: Mapped["Platform"] = relationship()
     device_model: Mapped["DeviceModel"] = relationship()
+    software_version_rel: Mapped["SoftwareVersion"] = relationship()
     parent_version: Mapped["CommandOutputLibrary"] = relationship(remote_side="CommandOutputLibrary.id")
 
 
@@ -91,3 +95,4 @@ class ParserTemplate(Base, UUIDMixin, TimestampMixin):
 
 from snep.models.device import DeviceModel  # noqa: E402, F401
 from snep.models.platform import Platform  # noqa: E402, F401
+from snep.models.software_version import SoftwareVersion  # noqa: E402, F401
