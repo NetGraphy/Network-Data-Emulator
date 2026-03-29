@@ -35,13 +35,61 @@ class FilterTest(BaseModel):
     test_args: list = []
 
 
+# --- Static routes FIRST (before /{filter_id}) ---
+
+@router.post("/test")
+async def test_filter_endpoint(body: FilterTest):
+    """Compile and execute a filter with test arguments. Does NOT save."""
+    result = test_filter(body.name, body.code, body.signature, body.test_args)
+    return result
+
+
+@router.post("/reload")
+async def reload_filters(db: DBSession):
+    """Reload all custom filters from DB into the Jinja2 environment."""
+    from snep.services.filter_registry import load_custom_filters
+    result = await load_custom_filters(db)
+    return result
+
+
+@router.get("/registered")
+async def list_registered_filters():
+    """List all Jinja2 filters (built-in + custom)."""
+    from snep.services.filter_registry import get_all_filter_names
+    return {"filters": get_all_filter_names()}
+
+
+@router.get("/modules/allowed")
+async def list_allowed_modules():
+    return {"allowed": get_allowed_modules(), "blocked": sorted(BLOCKED_MODULES)}
+
+
+@router.post("/modules/add")
+async def add_module(body: dict):
+    module = body.get("module", "")
+    if not module:
+        raise HTTPException(422, "Module name required")
+    result = add_allowed_module(module)
+    if "error" in result:
+        raise HTTPException(400, result["error"])
+    return result
+
+
+@router.post("/modules/remove")
+async def remove_module(body: dict):
+    module = body.get("module", "")
+    result = remove_allowed_module(module)
+    if "error" in result:
+        raise HTTPException(400, result["error"])
+    return result
+
+
 # --- CRUD ---
 
 @router.get("")
 async def list_filters(db: DBSession, pg: PaginationDep):
     result = await db.execute(
-        select(CustomFilter).order_by(CustomFilter.category, CustomFilter.name)
-        .offset(pg.offset).limit(pg.limit)
+        select(CustomFilter).order_by(CustomFilter.category, CustomFilter.name).offset(pg.offset).limit(pg.limit)
     )
     return [
         {
@@ -69,13 +117,11 @@ async def get_filter(filter_id: uuid.UUID, db: DBSession):
 
 @router.post("", status_code=201)
 async def create_filter(body: FilterCreate, db: DBSession):
-    # Validate by compiling
     try:
         compile_filter(body.name, body.code, body.signature)
     except Exception as e:
         raise HTTPException(422, f"Filter compilation failed: {e}")
 
-    # Check name uniqueness
     existing = await db.execute(select(CustomFilter).where(CustomFilter.name == body.name))
     if existing.scalar_one_or_none():
         raise HTTPException(409, f"Filter '{body.name}' already exists")
@@ -85,10 +131,8 @@ async def create_filter(body: FilterCreate, db: DBSession):
     await db.commit()
     await db.refresh(f)
 
-    # Register on Jinja2 environment
     from snep.services.filter_registry import load_custom_filters
     await load_custom_filters(db)
-
     return {"id": str(f.id), "name": f.name, "status": "created_and_registered"}
 
 
@@ -98,7 +142,6 @@ async def update_filter(filter_id: uuid.UUID, body: FilterCreate, db: DBSession)
     if not f:
         raise HTTPException(404, "Filter not found")
 
-    # Validate new code
     try:
         compile_filter(body.name, body.code, body.signature)
     except Exception as e:
@@ -108,10 +151,8 @@ async def update_filter(filter_id: uuid.UUID, body: FilterCreate, db: DBSession)
         setattr(f, key, val)
     await db.commit()
 
-    # Reload filters
     from snep.services.filter_registry import load_custom_filters
     await load_custom_filters(db)
-
     return {"id": str(f.id), "name": f.name, "status": "updated_and_reloaded"}
 
 
@@ -127,63 +168,3 @@ async def delete_filter(filter_id: uuid.UUID, db: DBSession):
 
     from snep.services.filter_registry import load_custom_filters
     await load_custom_filters(db)
-
-
-# --- Test ---
-
-@router.post("/test")
-async def test_filter_endpoint(body: FilterTest):
-    """Compile and execute a filter with test arguments. Does NOT save."""
-    result = test_filter(body.name, body.code, body.signature, body.test_args)
-    return result
-
-
-# --- Reload ---
-
-@router.post("/reload")
-async def reload_filters(db: DBSession):
-    """Reload all custom filters from DB into the Jinja2 environment."""
-    from snep.services.filter_registry import load_custom_filters
-    result = await load_custom_filters(db)
-    return result
-
-
-# --- Module Management ---
-
-@router.get("/modules/allowed")
-async def list_allowed_modules():
-    """List all allowed Python modules for custom filters."""
-    return {
-        "allowed": get_allowed_modules(),
-        "blocked": sorted(BLOCKED_MODULES),
-    }
-
-
-@router.post("/modules/add")
-async def add_module(body: dict):
-    """Admin: add a Python module to the allowed list."""
-    module = body.get("module", "")
-    if not module:
-        raise HTTPException(422, "Module name required")
-    result = add_allowed_module(module)
-    if "error" in result:
-        raise HTTPException(400, result["error"])
-    return result
-
-
-@router.post("/modules/remove")
-async def remove_module(body: dict):
-    module = body.get("module", "")
-    result = remove_allowed_module(module)
-    if "error" in result:
-        raise HTTPException(400, result["error"])
-    return result
-
-
-# --- Registered Filters Info ---
-
-@router.get("/registered")
-async def list_registered_filters():
-    """List all Jinja2 filters (built-in + custom)."""
-    from snep.services.filter_registry import get_all_filter_names
-    return {"filters": get_all_filter_names()}
