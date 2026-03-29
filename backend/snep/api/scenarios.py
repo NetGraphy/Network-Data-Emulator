@@ -34,18 +34,35 @@ class ScenarioCreate(BaseModel):
 
 @router.get("")
 async def list_scenarios(db: DBSession, pg: PaginationDep):
+    from snep.services.scenario_engine import get_scenario_progress
     result = await db.execute(
         select(Scenario).options(selectinload(Scenario.events)).offset(pg.offset).limit(pg.limit)
     )
     scenarios = result.scalars().all()
-    return [
-        {
+    out = []
+    for s in scenarios:
+        # Sync status from in-memory execution state
+        progress = get_scenario_progress(str(s.id))
+        effective_status = s.status
+        if progress.get("status") == "completed" and s.status == "running":
+            s.status = "completed"
+            effective_status = "completed"
+        elif progress.get("status") == "failed" and s.status == "running":
+            s.status = "failed"
+            effective_status = "failed"
+
+        # Count logs for this scenario
+        log_count = await db.scalar(
+            select(func.count()).select_from(LogEntry).where(LogEntry.scenario_id == s.id)
+        )
+
+        out.append({
             "id": str(s.id), "name": s.name, "description": s.description,
-            "status": s.status, "is_repeatable": s.is_repeatable,
-            "event_count": len(s.events),
-        }
-        for s in scenarios
-    ]
+            "status": effective_status, "is_repeatable": s.is_repeatable,
+            "event_count": len(s.events), "log_count": log_count or 0,
+        })
+    await db.commit()
+    return out
 
 
 @router.get("/{scenario_id}")

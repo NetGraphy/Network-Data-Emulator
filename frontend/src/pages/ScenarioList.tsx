@@ -1,29 +1,46 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchScenarios, fetchScenario, startScenario, pauseScenario, resumeScenario, resetScenario, getScenarioExecution } from '../api/client'
+import {
+  fetchScenarios, fetchScenario, startScenario, pauseScenario,
+  resumeScenario, resetScenario, getScenarioExecution,
+  createScenario, fetchDevices, fetchInterfaces, fetchLinks,
+} from '../api/client'
+
+const ACTION_TYPES = [
+  { value: 'interface_state_change', label: 'Interface State Change', fields: ['interface', 'oper_status'] },
+  { value: 'interface_admin_change', label: 'Interface Admin Change', fields: ['interface', 'admin_status'] },
+  { value: 'device_state_change', label: 'Device State Change', fields: ['device', 'admin_state'] },
+  { value: 'counter_set', label: 'Counter Set', fields: ['interface', 'counter_name', 'value'] },
+  { value: 'counter_rate_change', label: 'Counter Rate Change', fields: ['interface', 'rate_in_bps', 'rate_out_bps'] },
+  { value: 'link_state_change', label: 'Link State Change', fields: ['link', 'admin_state'] },
+]
+
+const TRIGGER_TYPES = [
+  { value: 'immediate', label: 'Immediate' },
+  { value: 'delay', label: 'Delay (seconds)' },
+  { value: 'manual', label: 'Manual Trigger' },
+]
+
+type View = 'list' | 'create'
 
 export default function ScenarioList() {
   const queryClient = useQueryClient()
+  const [view, setView] = useState<View>('list')
   const [selectedId, setSelectedId] = useState<string | null>(null)
+
   const { data: scenarios, isLoading } = useQuery({ queryKey: ['scenarios'], queryFn: fetchScenarios })
   const { data: detail } = useQuery({
-    queryKey: ['scenario', selectedId],
-    queryFn: () => fetchScenario(selectedId!),
-    enabled: !!selectedId,
+    queryKey: ['scenario', selectedId], queryFn: () => fetchScenario(selectedId!), enabled: !!selectedId,
   })
   const { data: execution, refetch: refetchExec } = useQuery({
-    queryKey: ['scenario-exec', selectedId],
-    queryFn: () => getScenarioExecution(selectedId!),
-    enabled: !!selectedId,
-    refetchInterval: selectedId ? 3000 : false,
+    queryKey: ['scenario-exec', selectedId], queryFn: () => getScenarioExecution(selectedId!),
+    enabled: !!selectedId, refetchInterval: selectedId ? 3000 : false,
   })
 
   const startMut = useMutation({
     mutationFn: (id: string) => startScenario(id),
     onSuccess: () => { refetchExec(); queryClient.invalidateQueries({ queryKey: ['scenarios'] }); },
   })
-  const pauseMut = useMutation({ mutationFn: (id: string) => pauseScenario(id), onSuccess: () => refetchExec() })
-  const resumeMut = useMutation({ mutationFn: (id: string) => resumeScenario(id), onSuccess: () => refetchExec() })
   const resetMut = useMutation({
     mutationFn: (id: string) => resetScenario(id),
     onSuccess: () => { refetchExec(); queryClient.invalidateQueries({ queryKey: ['scenarios'] }); },
@@ -32,20 +49,26 @@ export default function ScenarioList() {
   const progress = execution?.progress || {}
   const logs = execution?.recent_logs || []
 
+  if (view === 'create') {
+    return <ScenarioBuilder onBack={() => { setView('list'); queryClient.invalidateQueries({ queryKey: ['scenarios'] }); }} />
+  }
+
   return (
     <div className="p-6 h-full flex gap-6">
       {/* Left: Scenario list */}
-      <div className="w-1/3 flex flex-col gap-3">
-        <div className="flex items-center justify-between mb-2">
+      <div className="w-1/3 flex flex-col">
+        <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Scenarios</h2>
+          <button onClick={() => setView('create')} className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 rounded-lg text-xs font-medium">
+            + New Scenario
+          </button>
         </div>
 
         {isLoading ? <p className="text-gray-500">Loading...</p> : (
-          <div className="space-y-2">
+          <div className="space-y-2 overflow-auto">
             {scenarios?.map((s: any) => (
               <button
-                key={s.id}
-                onClick={() => setSelectedId(s.id)}
+                key={s.id} onClick={() => setSelectedId(s.id)}
                 className={`w-full text-left p-4 rounded-xl border transition-colors ${
                   selectedId === s.id ? 'border-cyan-500 bg-cyan-500/5' : 'border-gray-800 bg-gray-900 hover:border-gray-700'
                 }`}
@@ -55,7 +78,10 @@ export default function ScenarioList() {
                   <StatusBadge status={s.status} />
                 </div>
                 <p className="text-xs text-gray-500 line-clamp-2">{s.description}</p>
-                <span className="text-[10px] text-gray-600 mt-1 block">{s.event_count} events</span>
+                <div className="flex gap-3 mt-1 text-[10px] text-gray-600">
+                  <span>{s.event_count} events</span>
+                  {s.log_count > 0 && <span>{s.log_count} logs</span>}
+                </div>
               </button>
             ))}
           </div>
@@ -73,21 +99,12 @@ export default function ScenarioList() {
                 <StatusBadge status={detail.status} />
               </div>
               <p className="text-sm text-gray-400 mb-4">{detail.description}</p>
-
               <div className="flex gap-2">
                 {(detail.status === 'ready' || detail.status === 'completed') && (
                   <button onClick={() => startMut.mutate(selectedId)} disabled={startMut.isPending}
                     className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg text-sm font-medium">
-                    {startMut.isPending ? 'Starting...' : 'Start Scenario'}
+                    {startMut.isPending ? 'Starting...' : 'Start'}
                   </button>
-                )}
-                {detail.status === 'running' && (
-                  <button onClick={() => pauseMut.mutate(selectedId)}
-                    className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-sm font-medium">Pause</button>
-                )}
-                {progress.status === 'paused' && (
-                  <button onClick={() => resumeMut.mutate(selectedId)}
-                    className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg text-sm font-medium">Resume</button>
                 )}
                 {(detail.status === 'completed' || detail.status === 'running') && (
                   <button onClick={() => resetMut.mutate(selectedId)} disabled={resetMut.isPending}
@@ -102,54 +119,39 @@ export default function ScenarioList() {
             {progress.status && progress.status !== 'not_started' && (
               <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-medium text-gray-200">Execution Progress</h4>
-                  <span className="text-xs text-gray-400">
-                    {progress.current_event || 0} / {progress.total_events || 0} events
-                  </span>
+                  <h4 className="text-sm font-medium">Execution Progress</h4>
+                  <span className="text-xs text-gray-400">{progress.current_event || 0} / {progress.total_events || 0} events</span>
                 </div>
-                <div className="w-full bg-gray-800 rounded-full h-2 mb-3">
-                  <div
-                    className={`h-2 rounded-full transition-all ${
-                      progress.status === 'completed' ? 'bg-green-500' :
-                      progress.status === 'failed' ? 'bg-red-500' : 'bg-cyan-500'
-                    }`}
-                    style={{ width: `${progress.total_events ? (progress.current_event / progress.total_events * 100) : 0}%` }}
-                  />
+                <div className="w-full bg-gray-800 rounded-full h-2 mb-2">
+                  <div className={`h-2 rounded-full ${progress.status === 'completed' ? 'bg-green-500' : 'bg-cyan-500'}`}
+                    style={{ width: `${progress.total_events ? (progress.current_event / progress.total_events * 100) : 0}%` }} />
                 </div>
-                <div className="text-xs text-gray-400">
-                  Status: <span className="text-gray-200">{progress.status}</span>
-                  {' '} | Logs generated: <span className="text-gray-200">{progress.logs_generated || 0}</span>
-                </div>
+                <span className="text-xs text-gray-400">
+                  {progress.status} | {progress.logs_generated || 0} logs
+                </span>
               </div>
             )}
 
             {/* Events */}
             <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
-              <h4 className="text-sm font-medium text-gray-200 mb-3">Events</h4>
+              <h4 className="text-sm font-medium mb-3">Events ({detail.events?.length})</h4>
               <div className="space-y-2">
                 {detail.events?.map((e: any, i: number) => {
                   const completed = progress.completed_events?.find((c: any) => c.event_id === e.id)
                   return (
-                    <div key={e.id} className={`flex items-center gap-3 p-3 rounded-lg ${
-                      completed ? 'bg-green-500/5 border border-green-500/20' : 'bg-gray-800/50'
-                    }`}>
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                        completed ? 'bg-green-600 text-white' :
-                        progress.current_event === i + 1 ? 'bg-cyan-600 text-white animate-pulse' :
-                        'bg-gray-700 text-gray-400'
+                    <div key={e.id} className={`flex items-center gap-3 p-3 rounded-lg ${completed ? 'bg-green-500/5 border border-green-500/20' : 'bg-gray-800/50'}`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                        completed ? 'bg-green-600' : progress.current_event === i + 1 ? 'bg-cyan-600 animate-pulse' : 'bg-gray-700 text-gray-400'
                       }`}>{i + 1}</div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono text-gray-200">{e.action_type}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-mono">{e.action_type}</span>
                           <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                            e.trigger_type === 'immediate' ? 'bg-gray-700 text-gray-300' :
-                            e.trigger_type === 'delay' ? 'bg-blue-900/30 text-blue-400' :
-                            'bg-purple-900/30 text-purple-400'
+                            e.trigger_type === 'delay' ? 'bg-blue-900/30 text-blue-400' : 'bg-gray-700 text-gray-300'
                           }`}>{e.trigger_type}{e.trigger_config?.delay_seconds ? ` (${e.trigger_config.delay_seconds}s)` : ''}</span>
                         </div>
-                        {completed && (
-                          <span className="text-[10px] text-green-400">{completed.logs_generated} logs generated</span>
-                        )}
+                        <p className="text-[10px] text-gray-500 truncate mt-0.5">{JSON.stringify(e.action_config)}</p>
+                        {completed && <span className="text-[10px] text-green-400">{completed.logs_generated} logs</span>}
                       </div>
                     </div>
                   )
@@ -157,19 +159,13 @@ export default function ScenarioList() {
               </div>
             </div>
 
-            {/* Generated Logs */}
+            {/* Logs */}
             {logs.length > 0 && (
               <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
-                <h4 className="text-sm font-medium text-gray-200 mb-3">
-                  Generated Syslog ({execution?.total_logs || 0} total)
-                </h4>
+                <h4 className="text-sm font-medium mb-3">Generated Syslog ({execution?.total_logs})</h4>
                 <div className="space-y-0.5 max-h-[400px] overflow-auto">
                   {logs.map((log: any, i: number) => (
-                    <div key={i} className={`font-mono text-[11px] py-0.5 ${
-                      log.severity <= 2 ? 'text-red-400' :
-                      log.severity <= 4 ? 'text-yellow-400' :
-                      'text-green-400'
-                    }`}>
+                    <div key={i} className={`font-mono text-[11px] py-0.5 ${log.severity <= 2 ? 'text-red-400' : log.severity <= 4 ? 'text-yellow-400' : 'text-green-400'}`}>
                       {log.message}
                     </div>
                   ))}
@@ -179,7 +175,7 @@ export default function ScenarioList() {
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
-            Select a scenario to view details and run it
+            Select a scenario or create a new one
           </div>
         )}
       </div>
@@ -188,14 +184,256 @@ export default function ScenarioList() {
 }
 
 
+// === Scenario Builder ===
+
+function ScenarioBuilder({ onBack }: { onBack: () => void }) {
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [events, setEvents] = useState<any[]>([])
+  const [saving, setSaving] = useState(false)
+
+  // Load devices and interfaces for pickers
+  const { data: devices } = useQuery({ queryKey: ['devices'], queryFn: fetchDevices })
+  const [selectedDeviceId, setSelectedDeviceId] = useState('')
+  const { data: interfaces } = useQuery({
+    queryKey: ['interfaces', selectedDeviceId],
+    queryFn: () => fetchInterfaces(selectedDeviceId),
+    enabled: !!selectedDeviceId,
+  })
+
+  const addEvent = () => {
+    setEvents([...events, {
+      sequence_order: events.length + 1,
+      trigger_type: 'immediate',
+      trigger_config: {},
+      action_type: 'interface_state_change',
+      action_config: {},
+      rollback_action: null,
+    }])
+  }
+
+  const updateEvent = (index: number, field: string, value: any) => {
+    const updated = [...events]
+    if (field.startsWith('action_config.')) {
+      const key = field.split('.')[1]
+      updated[index].action_config = { ...updated[index].action_config, [key]: value }
+    } else if (field.startsWith('trigger_config.')) {
+      const key = field.split('.')[1]
+      updated[index].trigger_config = { ...updated[index].trigger_config, [key]: value }
+    } else {
+      updated[index][field] = value
+    }
+    setEvents(updated)
+  }
+
+  const removeEvent = (index: number) => {
+    setEvents(events.filter((_, i) => i !== index).map((e, i) => ({ ...e, sequence_order: i + 1 })))
+  }
+
+  const handleSave = async () => {
+    if (!name || events.length === 0) return
+    setSaving(true)
+    try {
+      // Build rollback actions
+      const eventsWithRollback = events.map(e => {
+        let rollback = null
+        if (e.action_type === 'interface_state_change') {
+          const opposite = e.action_config.oper_status === 'down' ? 'up' : 'down'
+          rollback = { action_type: 'interface_state_change', action_config: { interface_id: e.action_config.interface_id, oper_status: opposite } }
+        } else if (e.action_type === 'device_state_change') {
+          const opposite = e.action_config.admin_state === 'maintenance' ? 'active' : 'maintenance'
+          rollback = { action_type: 'device_state_change', action_config: { device_id: e.action_config.device_id, admin_state: opposite } }
+        } else if (e.action_type === 'counter_set') {
+          rollback = { action_type: 'counter_set', action_config: { interface_id: e.action_config.interface_id, counter_name: e.action_config.counter_name, value: 0 } }
+        }
+        return { ...e, rollback_action: rollback }
+      })
+
+      await createScenario({ name, description, events: eventsWithRollback })
+      onBack()
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="p-6 max-w-4xl">
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={onBack} className="text-gray-400 hover:text-gray-200 text-sm">Back</button>
+        <h2 className="text-xl font-semibold">New Scenario</h2>
+      </div>
+
+      {/* Name + Description */}
+      <div className="bg-gray-900 rounded-xl border border-gray-800 p-5 mb-4 space-y-3">
+        <div>
+          <label className="text-xs text-gray-400 block mb-1">Scenario Name</label>
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g., Core Router Failure"
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm focus:border-cyan-500 focus:outline-none" />
+        </div>
+        <div>
+          <label className="text-xs text-gray-400 block mb-1">Description</label>
+          <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2}
+            placeholder="What this scenario simulates..."
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:border-cyan-500 focus:outline-none resize-none" />
+        </div>
+      </div>
+
+      {/* Device/Interface Picker (shared context) */}
+      <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 mb-4">
+        <label className="text-xs text-gray-400 block mb-1">Target Device (for interface picker)</label>
+        <select value={selectedDeviceId} onChange={e => setSelectedDeviceId(e.target.value)}
+          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none">
+          <option value="">Select device...</option>
+          {devices?.map((d: any) => <option key={d.id} value={d.id}>{d.hostname} ({d.platform_name})</option>)}
+        </select>
+      </div>
+
+      {/* Events */}
+      <div className="space-y-3 mb-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-gray-200">Events ({events.length})</h3>
+          <button onClick={addEvent} className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 rounded-lg text-xs font-medium">
+            + Add Event
+          </button>
+        </div>
+
+        {events.map((event, i) => (
+          <div key={i} className="bg-gray-900 rounded-xl border border-gray-800 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-cyan-600 flex items-center justify-center text-xs font-bold">{i + 1}</span>
+                <span className="text-sm font-medium">Event {i + 1}</span>
+              </div>
+              <button onClick={() => removeEvent(i)} className="text-xs text-red-400 hover:text-red-300">Remove</button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {/* Trigger */}
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">Trigger</label>
+                <select value={event.trigger_type} onChange={e => updateEvent(i, 'trigger_type', e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none">
+                  {TRIGGER_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+              {event.trigger_type === 'delay' && (
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">Delay (seconds)</label>
+                  <input type="number" value={event.trigger_config.delay_seconds || ''} onChange={e => updateEvent(i, 'trigger_config.delay_seconds', parseInt(e.target.value) || 0)}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none" />
+                </div>
+              )}
+
+              {/* Action Type */}
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">Action</label>
+                <select value={event.action_type} onChange={e => updateEvent(i, 'action_type', e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none">
+                  {ACTION_TYPES.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
+                </select>
+              </div>
+
+              {/* Action-specific fields */}
+              {(event.action_type === 'interface_state_change' || event.action_type === 'interface_admin_change' || event.action_type === 'counter_set' || event.action_type === 'counter_rate_change') && (
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">Interface</label>
+                  <select value={event.action_config.interface_id || ''} onChange={e => updateEvent(i, 'action_config.interface_id', e.target.value)}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm font-mono focus:border-cyan-500 focus:outline-none">
+                    <option value="">Select interface...</option>
+                    {interfaces?.map((iface: any) => <option key={iface.id} value={iface.id}>{iface.name} ({iface.oper_status})</option>)}
+                  </select>
+                </div>
+              )}
+
+              {event.action_type === 'interface_state_change' && (
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">Oper Status</label>
+                  <select value={event.action_config.oper_status || ''} onChange={e => updateEvent(i, 'action_config.oper_status', e.target.value)}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none">
+                    <option value="">Select...</option>
+                    <option value="down">down</option>
+                    <option value="up">up</option>
+                  </select>
+                </div>
+              )}
+
+              {event.action_type === 'device_state_change' && (
+                <>
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">Device</label>
+                    <select value={event.action_config.device_id || ''} onChange={e => updateEvent(i, 'action_config.device_id', e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none">
+                      <option value="">Select device...</option>
+                      {devices?.map((d: any) => <option key={d.id} value={d.id}>{d.hostname}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">Admin State</label>
+                    <select value={event.action_config.admin_state || ''} onChange={e => updateEvent(i, 'action_config.admin_state', e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none">
+                      <option value="">Select...</option>
+                      <option value="maintenance">maintenance</option>
+                      <option value="active">active</option>
+                      <option value="decommissioned">decommissioned</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {event.action_type === 'counter_set' && (
+                <>
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">Counter</label>
+                    <select value={event.action_config.counter_name || ''} onChange={e => updateEvent(i, 'action_config.counter_name', e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none">
+                      <option value="">Select...</option>
+                      <option value="in_errors">in_errors</option>
+                      <option value="out_errors">out_errors</option>
+                      <option value="crc_errors">crc_errors</option>
+                      <option value="in_discards">in_discards</option>
+                      <option value="collisions">collisions</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">Value</label>
+                    <input type="number" value={event.action_config.value || ''} onChange={e => updateEvent(i, 'action_config.value', parseInt(e.target.value) || 0)}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none" />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {events.length === 0 && (
+          <div className="bg-gray-900 rounded-xl border border-gray-800 p-8 text-center text-gray-500 text-sm">
+            Click "+ Add Event" to build your scenario. Events execute in order.
+          </div>
+        )}
+      </div>
+
+      {/* Save */}
+      <div className="flex gap-3">
+        <button onClick={handleSave} disabled={!name || events.length === 0 || saving}
+          className="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 rounded-lg text-sm font-medium">
+          {saving ? 'Saving...' : 'Create Scenario'}
+        </button>
+        <button onClick={onBack} className="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-400">
+          Cancel
+        </button>
+      </div>
+    </div>
+  )
+}
+
+
 function StatusBadge({ status }: { status: string }) {
   const c: Record<string, string> = {
-    ready: 'bg-green-500/10 text-green-400',
-    running: 'bg-cyan-500/10 text-cyan-400',
-    paused: 'bg-yellow-500/10 text-yellow-400',
-    completed: 'bg-gray-500/10 text-gray-400',
-    draft: 'bg-gray-500/10 text-gray-500',
-    failed: 'bg-red-500/10 text-red-400',
+    ready: 'bg-green-500/10 text-green-400', running: 'bg-cyan-500/10 text-cyan-400',
+    paused: 'bg-yellow-500/10 text-yellow-400', completed: 'bg-gray-500/10 text-gray-400',
+    draft: 'bg-gray-500/10 text-gray-500', failed: 'bg-red-500/10 text-red-400',
   }
   return <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${c[status] || c.draft}`}>{status}</span>
 }
