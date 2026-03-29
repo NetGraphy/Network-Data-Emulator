@@ -1,10 +1,15 @@
 # SNEP - Synthetic Network Emulator Platform
 
-**What if you could test your entire network automation stack against 10,000 realistic devices -- without a single piece of hardware, a single vendor license, or a single dollar in cloud compute?**
+**What if you could test your entire network observability and automation stack against 10,000 realistic devices -- without a single piece of hardware, a single vendor license, or a single dollar in cloud compute?**
 
-SNEP emulates enterprise network devices at the protocol level. SSH into an emulated Cisco switch, run `show version`, and get output that passes through TextFSM parsers without modification. Walk IF-MIB via SNMP and get counter values that advance in real time. Inject faults and watch your automation react -- all from a laptop running Docker.
+SNEP emulates enterprise network devices at the protocol level. Point your SNMP poller at it and watch interface counters advance in real time. SSH in and run `show version` -- get output that passes through TextFSM parsers without modification. Trigger a fault scenario and watch syslog messages cascade across neighbors exactly like a real outage. Then verify your monitoring dashboards, alerting pipelines, and automation runbooks all respond correctly.
 
-This isn't a mock. It's not a simulator. It's a **protocol-level emulator** that makes your tools believe they're talking to real hardware.
+This isn't a mock. It's not a simulator. It's a **protocol-level emulator** built for testing the tools that manage networks:
+
+- **Observability platforms** (Zabbix, LibreNMS, Datadog, Grafana) -- SNMP polling, syslog ingestion, trap handling against realistic device fleets
+- **Automation frameworks** (Nornir, Ansible, Netmiko, NAPALM) -- SSH command execution, config push validation, parser testing
+- **Incident management** (PagerDuty, ServiceNow, custom MIM workflows) -- fault injection that generates real syslog + SNMP traps to test alert correlation
+- **AI/ML network agents** -- training environments with thousands of devices that respond to SSH and SNMP like production hardware
 
 > **We're looking for early adopters.** SNEP is in active development and we want network engineers, automation developers, and platform teams to help shape the roadmap. If you're building network automation tooling and need a realistic test environment, [open an issue](https://github.com/NetGraphy/Network-Data-Emulator/issues) to share your use case, request features, or report bugs. Early adopters get direct input on the feature roadmap and priority support.
 
@@ -14,23 +19,51 @@ This isn't a mock. It's not a simulator. It's a **protocol-level emulator** that
 
 ## Why SNEP Exists
 
-Network automation development has a tooling gap:
+Network observability and automation development has a tooling gap:
 
-| Approach | Problem |
-|----------|---------|
-| **Real hardware labs** | $50K+ per rack, weeks to provision, impossible to share remotely |
-| **GNS3 / EVE-NG** | 2 GB RAM per device, requires licensed vendor firmware, max ~50 devices |
-| **Mock tools** | No protocol fidelity -- parsers fail, SNMP doesn't work, no cross-protocol consistency |
-
-SNEP fills this gap: **thousands of devices on a single machine, zero vendor licensing, full SSH + SNMP protocol support, realistic CLI output that parsers actually accept.**
+| Approach | Automation Testing | Observability Testing | Problem |
+|----------|---|---|---------|
+| **Real hardware labs** | Works | Works | $50K+ per rack, weeks to provision, can't simulate faults on demand |
+| **GNS3 / EVE-NG** | Works | Partial (SNMP varies) | 2 GB RAM per device, vendor firmware required, max ~50 devices |
+| **Mock tools** | Partial | No SNMP, no traps | No protocol fidelity -- parsers fail, no cross-protocol consistency |
+| **SNEP** | **Full SSH + CLI** | **Full SNMP + syslog + traps** | Thousands of devices, zero licensing, fault injection on demand |
 
 ### Who It's For
 
-- **Network automation engineers** testing Nornir, Ansible, Netmiko, or custom scripts
-- **Parser developers** validating TextFSM, Genie, or NTC-Templates against real-format output
-- **Platform teams** building network source-of-truth or incident management systems
-- **AI/ML researchers** training network-aware agents that interact via SSH/SNMP
-- **Educators** who need safe, disposable lab environments
+- **Observability teams** validating SNMP polling, syslog pipelines, and alerting rules against realistic device fleets at scale
+- **Network automation engineers** testing Nornir, Ansible, Netmiko, or custom scripts against devices that respond like production
+- **SRE / incident management teams** testing MIM workflows, alert correlation, and runbook automation with injectable faults
+- **Parser developers** validating TextFSM, Genie, or NTC-Templates against versioned, real-format CLI output
+- **Platform teams** building network source-of-truth systems that consume SSH and SNMP data
+- **AI/ML researchers** training network-aware agents in environments with thousands of interactive devices
+- **Educators** who need safe, disposable, realistic lab environments
+
+### Example: Testing Your Monitoring Stack
+
+```bash
+# 1. Start SNEP with 5 emulated Cisco switches
+docker compose up -d
+
+# 2. Point your SNMP poller at the emulated devices
+#    Zabbix/LibreNMS/Datadog: add host 127.0.0.1:20000, community "public"
+snmpwalk -v2c -c public 127.0.0.1:20000 IF-MIB::ifTable
+#    → Returns 6 interfaces with advancing counters, correct ifType, ifSpeed, ifOperStatus
+
+# 3. Trigger a fault scenario via the API
+curl -X POST http://localhost:8000/api/v1/scenarios/{id}/start
+#    → Interface goes down, CRC errors spike, neighbors lose adjacency
+#    → Syslog: %LINK-3-UPDOWN: Interface GigabitEthernet1/0/1, changed state to down
+#    → SNMP: ifOperStatus changes to down(2), counters freeze
+
+# 4. Verify your monitoring detected the fault:
+#    - Did Zabbix trigger an alert for ifOperStatus change?
+#    - Did your syslog pipeline parse the %LINK-3-UPDOWN message?
+#    - Did your dashboard show the interface going red?
+#    - Did your runbook automation attempt a remediation?
+
+# 5. Reset the scenario — everything returns to normal
+curl -X POST http://localhost:8000/api/v1/scenarios/{id}/reset
+```
 
 ---
 
