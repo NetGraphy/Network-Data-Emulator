@@ -33,8 +33,8 @@ async def export_nornir(db: DBSession):
         cred = d.credentials[0] if d.credentials else None
 
         host_entry = {
-            "hostname": ssh_mapping.listen_address if ssh_mapping else "127.0.0.1",
-            "port": ssh_mapping.listen_port if ssh_mapping else 22,
+            "hostname": ssh_mapping.connect_address if ssh_mapping else "127.0.0.1",
+            "port": ssh_mapping.connect_port if ssh_mapping else 22,
             "username": cred.username if cred else "admin",
             "password": cred.password if cred else "admin",
             "platform": d.device_model.platform.name if d.device_model and d.device_model.platform else "cisco_ios",
@@ -45,7 +45,8 @@ async def export_nornir(db: DBSession):
             },
         }
         if snmp_mapping:
-            host_entry["data"]["snmp_port"] = snmp_mapping.listen_port
+            host_entry["data"]["snmp_port"] = snmp_mapping.connect_port
+            host_entry["data"]["snmp_host"] = snmp_mapping.connect_address
         if d.snmp_profile and d.snmp_profile.v2_community:
             host_entry["data"]["snmp_community"] = d.snmp_profile.v2_community
 
@@ -90,8 +91,8 @@ async def export_ansible(db: DBSession):
         }
 
         hosts[d.hostname] = {
-            "ansible_host": ssh_mapping.listen_address if ssh_mapping else "127.0.0.1",
-            "ansible_port": ssh_mapping.listen_port if ssh_mapping else 22,
+            "ansible_host": ssh_mapping.connect_address if ssh_mapping else "127.0.0.1",
+            "ansible_port": ssh_mapping.connect_port if ssh_mapping else 22,
             "ansible_user": cred.username if cred else "admin",
             "ansible_password": cred.password if cred else "admin",
             "ansible_network_os": ansible_platform_map.get(platform, platform),

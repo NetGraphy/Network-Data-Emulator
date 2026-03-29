@@ -8,9 +8,11 @@ class NetworkingSettings:
     def __init__(self):
         self.mode = os.environ.get("SNEP_NETWORK_MODE", "auto")
         self.bind_address = os.environ.get("SNEP_BIND_ADDRESS", "0.0.0.0")
+        self.connect_address = os.environ.get("SNEP_CONNECT_ADDRESS", "")  # auto-detect if empty
+        self.connect_hostname = os.environ.get("SNEP_CONNECT_HOSTNAME", "")  # optional: friendly hostname
         self.loopback_range = os.environ.get("SNEP_LOOPBACK_RANGE", "127.0.0.0/8")
         self.ssh_base_port = int(os.environ.get("SNEP_SSH_BASE_PORT", "10000"))
-        self.snmp_base_port = int(os.environ.get("SNEP_SNMP_BASE_PORT", "20000"))
+        self.snmp_base_port = int(os.environ.get("SNMP_BASE_PORT", os.environ.get("SNEP_SNMP_BASE_PORT", "20000")))
         self.prefer_standard_ports = os.environ.get("SNEP_PREFER_STANDARD_PORTS", "true").lower() == "true"
 
 

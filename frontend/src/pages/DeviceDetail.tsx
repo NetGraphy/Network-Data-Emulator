@@ -245,23 +245,93 @@ export default function DeviceDetail() {
       {tab === 'snmp' && <SNMPTab device={device} deviceId={id!} />}
 
       {tab === 'connection' && device.connection_info && (
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 space-y-4 text-sm">
-          {device.connection_info.ssh && (
-            <div>
-              <h4 className="text-gray-300 font-medium mb-2">SSH</h4>
-              <code className="bg-gray-800 px-3 py-2 rounded-lg block font-mono text-cyan-400">
-                ssh admin@{device.connection_info.ssh.host} -p {device.connection_info.ssh.port}
-              </code>
+        <div className="space-y-4">
+          {/* Connect commands */}
+          <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 space-y-4 text-sm">
+            <h3 className="font-medium text-gray-200">Connection Commands</h3>
+            {device.connection_info.ssh && (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs text-gray-400">SSH</span>
+                  <button onClick={() => navigator.clipboard.writeText(`ssh admin@${device.connection_info.ssh.host} -p ${device.connection_info.ssh.port}`)} className="text-xs text-gray-500 hover:text-gray-300">Copy</button>
+                </div>
+                <code className="bg-gray-800 px-3 py-2.5 rounded-lg block font-mono text-cyan-400 text-xs">
+                  ssh admin@{device.connection_info.ssh.host} -p {device.connection_info.ssh.port}
+                </code>
+              </div>
+            )}
+            {device.connection_info.snmp && (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs text-gray-400">SNMP Walk</span>
+                  <button onClick={() => navigator.clipboard.writeText(`snmpwalk -v2c -c ${device.snmp_profile?.v2_community || 'public'} ${device.connection_info.snmp.host}:${device.connection_info.snmp.port} 1.3.6.1.2.1.1`)} className="text-xs text-gray-500 hover:text-gray-300">Copy</button>
+                </div>
+                <code className="bg-gray-800 px-3 py-2.5 rounded-lg block font-mono text-cyan-400 text-xs">
+                  snmpwalk -v2c -c {device.snmp_profile?.v2_community || 'public'} {device.connection_info.snmp.host}:{device.connection_info.snmp.port} 1.3.6.1.2.1.1
+                </code>
+              </div>
+            )}
+          </div>
+
+          {/* Nornir inventory entry */}
+          <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 text-sm">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-medium text-gray-200">Nornir Inventory Entry</h3>
+              <button onClick={() => {
+                const entry = `${device.hostname}:\n  hostname: "${device.connection_info.ssh?.host}"\n  port: ${device.connection_info.ssh?.port}\n  username: "admin"\n  password: "cisco123"\n  platform: "${device.platform?.name || 'cisco_ios'}"`
+                navigator.clipboard.writeText(entry)
+              }} className="text-xs text-gray-500 hover:text-gray-300">Copy YAML</button>
             </div>
-          )}
-          {device.connection_info.snmp && (
-            <div>
-              <h4 className="text-gray-300 font-medium mb-2">SNMP</h4>
-              <code className="bg-gray-800 px-3 py-2 rounded-lg block font-mono text-cyan-400">
-                snmpwalk -v2c -c public {device.connection_info.snmp.host}:{device.connection_info.snmp.port} 1.3.6.1.2.1.1
-              </code>
+            <pre className="bg-gray-800 px-3 py-2.5 rounded-lg font-mono text-xs text-yellow-300 whitespace-pre">{`${device.hostname}:
+  hostname: "${device.connection_info.ssh?.host}"
+  port: ${device.connection_info.ssh?.port}
+  username: "admin"
+  password: "cisco123"
+  platform: "${device.platform?.name || 'cisco_ios'}"${device.connection_info.snmp ? `
+  data:
+    snmp_host: "${device.connection_info.snmp.host}"
+    snmp_port: ${device.connection_info.snmp.port}
+    snmp_community: "${device.snmp_profile?.v2_community || 'public'}"` : ''}`}</pre>
+          </div>
+
+          {/* Network details */}
+          <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 text-sm">
+            <h3 className="font-medium text-gray-200 mb-3">Network Details</h3>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              {device.connection_info.ssh && (
+                <>
+                  <div>
+                    <span className="text-gray-500 block">SSH Connect Address</span>
+                    <span className="font-mono text-gray-200">{device.connection_info.ssh.host}:{device.connection_info.ssh.port}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block">SSH Listen Address</span>
+                    <span className="font-mono text-gray-400">{device.connection_info.ssh.listen_host}:{device.connection_info.ssh.listen_port}</span>
+                  </div>
+                </>
+              )}
+              {device.connection_info.snmp && (
+                <>
+                  <div>
+                    <span className="text-gray-500 block">SNMP Connect Address</span>
+                    <span className="font-mono text-gray-200">{device.connection_info.snmp.host}:{device.connection_info.snmp.port}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block">SNMP Listen Address</span>
+                    <span className="font-mono text-gray-400">{device.connection_info.snmp.listen_host}:{device.connection_info.snmp.listen_port}</span>
+                  </div>
+                </>
+              )}
+              <div>
+                <span className="text-gray-500 block">Management IP</span>
+                <span className="font-mono text-gray-200">{device.management_ip || 'unassigned'}</span>
+              </div>
+              <div>
+                <span className="text-gray-500 block">Platform</span>
+                <span className="text-gray-200">{device.platform?.name}</span>
+              </div>
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>

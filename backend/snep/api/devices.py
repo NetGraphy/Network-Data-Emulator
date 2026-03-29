@@ -106,7 +106,12 @@ async def get_device(device_id: uuid.UUID, db: DBSession):
 
     conn_info = {}
     for cm in device.connection_mappings:
-        conn_info[cm.protocol] = {"host": cm.listen_address, "port": cm.listen_port}
+        conn_info[cm.protocol] = {
+            "host": cm.connect_address,
+            "port": cm.connect_port,
+            "listen_host": cm.listen_address,
+            "listen_port": cm.listen_port,
+        }
 
     now = datetime.now(timezone.utc)
     uptime = device.uptime_seconds + int((now - device.uptime_reference).total_seconds())

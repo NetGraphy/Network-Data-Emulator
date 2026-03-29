@@ -336,18 +336,24 @@ async def seed(session: AsyncSession) -> None:
         session.add_all(counters)
         all_interfaces[dev_data["hostname"]] = interfaces
 
-        # Connection Mappings (port-multiplex model)
+        # Connection Mappings — uses environment detection for connect_address
+        from snep.services.environment import get_connect_address
+        connect = get_connect_address()
         session.add(ConnectionMapping(
             device_id=DEVICE_IDS[i],
             protocol="ssh",
             listen_address="0.0.0.0",
             listen_port=10000 + port_offset,
+            connect_address=connect,
+            connect_port=10000 + port_offset,
         ))
         session.add(ConnectionMapping(
             device_id=DEVICE_IDS[i],
             protocol="snmp",
             listen_address="0.0.0.0",
             listen_port=20000 + port_offset,
+            connect_address=connect,
+            connect_port=20000 + port_offset,
         ))
         port_offset += 1
 
