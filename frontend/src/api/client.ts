@@ -57,3 +57,22 @@ export const exportAnsible = () => api.get('/export/ansible').then(r => r.data)
 export const importNetBox = (data: any) => api.post('/import/netbox', data).then(r => r.data)
 export const importNautobot = (data: any) => api.post('/import/nautobot', data).then(r => r.data)
 export const importNetGraphy = (data: any) => api.post('/import/netgraphy', data).then(r => r.data)
+
+// CLI Library (platform/version/model-based)
+export const fetchCLILibrary = (params?: Record<string, string>) =>
+  api.get('/cli-library', { params }).then(r => r.data)
+export const fetchCLILibraryEntry = (id: string) => api.get(`/cli-library/${id}`).then(r => r.data)
+export const createCLILibraryEntry = (data: any) => api.post('/cli-library', data).then(r => r.data)
+export const fetchCLILibraryVersions = (platformId: string, command: string) =>
+  api.get('/cli-library/versions', { params: { platform_id: platformId, command } }).then(r => r.data)
+export const fetchCLILibraryCommands = () => api.get('/cli-library/commands').then(r => r.data)
+export const diffCLIEntries = (id1: string, id2: string) => api.post(`/cli-library/${id1}/diff/${id2}`).then(r => r.data)
+
+// Platforms (for selectors)
+export const fetchPlatforms = () => api.get('/platforms').then(r => r.data)
+
+// Device Models (for selectors)
+export const fetchDeviceModels = (platformId?: string) => {
+  const url = platformId ? `/device-models?filter[platform_id]=${platformId}` : '/device-models'
+  return api.get(url).then(r => r.data)
+}

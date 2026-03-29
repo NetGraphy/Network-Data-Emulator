@@ -10,6 +10,7 @@ from snep.models.platform import Platform
 from snep.models.scenario import Scenario, ScenarioEvent
 from snep.models.snmp import SNMPProfile
 from snep.models.template import CommandTemplate
+from snep.models.cli_library import CommandOutputLibrary, ParserTemplate
 
 __all__ = [
     "Base",
@@ -26,4 +27,6 @@ __all__ = [
     "Scenario",
     "ScenarioEvent",
     "ConnectionMapping",
+    "CommandOutputLibrary",
+    "ParserTemplate",
 ]
