@@ -1,0 +1,55 @@
+import axios from 'axios'
+import type { CLIMapping, Device, InterfaceData, Link, Topology, Scenario, Neighbor, NeighborParseResult } from '../types'
+
+const api = axios.create({ baseURL: '/api/v1' })
+
+// Devices
+export const fetchDevices = () => api.get<Device[]>('/devices').then(r => r.data)
+export const fetchDevice = (id: string) => api.get(`/devices/${id}`).then(r => r.data)
+export const createDevice = (data: any) => api.post('/devices', data).then(r => r.data)
+export const updateDevice = (id: string, data: any) => api.patch(`/devices/${id}`, data).then(r => r.data)
+export const deleteDevice = (id: string) => api.delete(`/devices/${id}`)
+export const fetchDeviceNeighbors = (id: string) => api.get<Neighbor[]>(`/devices/${id}/neighbors`).then(r => r.data)
+
+// Interfaces
+export const fetchInterfaces = (deviceId?: string) => {
+  const params = deviceId ? { device_id: deviceId } : {}
+  return api.get<InterfaceData[]>('/interfaces', { params }).then(r => r.data)
+}
+export const updateInterface = (id: string, data: any) => api.patch(`/interfaces/${id}`, data).then(r => r.data)
+
+// Links
+export const fetchLinks = () => api.get<Link[]>('/links').then(r => r.data)
+export const createLink = (data: any) => api.post('/links', data).then(r => r.data)
+export const deleteLink = (id: string) => api.delete(`/links/${id}`)
+
+// Topology
+export const fetchTopology = () => api.get<Topology>('/topology').then(r => r.data)
+
+// CLI Mappings
+export const fetchCLIMappings = (deviceId?: string) => {
+  const params = deviceId ? { device_id: deviceId } : {}
+  return api.get<CLIMapping[]>('/cli-mappings', { params }).then(r => r.data)
+}
+export const createCLIMapping = (data: any) => api.post('/cli-mappings', data).then(r => r.data)
+export const updateCLIMapping = (id: string, data: any) => api.put(`/cli-mappings/${id}`, data).then(r => r.data)
+export const deleteCLIMapping = (id: string) => api.delete(`/cli-mappings/${id}`)
+export const parseNeighbors = (data: { raw_output: string; command_type: string }) =>
+  api.post<NeighborParseResult[]>('/cli-mappings/parse-neighbors', data).then(r => r.data)
+
+// Scenarios
+export const fetchScenarios = () => api.get<Scenario[]>('/scenarios').then(r => r.data)
+export const createScenario = (data: any) => api.post('/scenarios', data).then(r => r.data)
+
+// Execute
+export const executeCommand = (deviceId: string, command: string) =>
+  api.post(`/devices/${deviceId}/execute`, { command }).then(r => r.data)
+
+// Export
+export const exportNornir = () => api.get('/export/nornir').then(r => r.data)
+export const exportAnsible = () => api.get('/export/ansible').then(r => r.data)
+
+// Import
+export const importNetBox = (data: any) => api.post('/import/netbox', data).then(r => r.data)
+export const importNautobot = (data: any) => api.post('/import/nautobot', data).then(r => r.data)
+export const importNetGraphy = (data: any) => api.post('/import/netgraphy', data).then(r => r.data)

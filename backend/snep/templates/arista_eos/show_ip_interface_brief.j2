@@ -1,0 +1,5 @@
+                                                                        Address
+Interface         IP Address            Status      Protocol         MTU    Owner
+{% for iface in interfaces %}
+{{ iface.name | ljust(18) }}{{ (iface.ip_address | default('unassigned')) | ljust(22) }}{{ iface.admin_status | ljust(12) }}{{ iface.oper_status | ljust(17) }}{{ iface.mtu | string | rjust(5) }}
+{% endfor %}

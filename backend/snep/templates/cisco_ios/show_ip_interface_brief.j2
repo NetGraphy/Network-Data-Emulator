@@ -1,0 +1,4 @@
+Interface                  IP-Address      OK? Method Status                Protocol
+{% for iface in interfaces %}
+{{ iface.name | ljust(27) }}{{ (iface.ip_address | ip_only | default('unassigned')) | ljust(16) }}YES {{ 'manual' | ljust(7) }}{{ iface.admin_status | ljust(22) }}{{ iface.oper_status }}
+{% endfor %}

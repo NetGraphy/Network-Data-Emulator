@@ -1,0 +1,12 @@
+Capability Codes: R - Router, T - Trans Bridge, B - Source Route Bridge
+                  S - Switch, H - Host, I - IGMP, r - Repeater, P - Phone,
+                  D - Remote, C - CVTA, M - Two-port Mac Relay
+
+Device ID        Local Intrfce     Holdtme    Capability  Platform  Port ID
+{% for neighbor in neighbors %}
+{% if neighbor.discovery_protocol in ['cdp', 'both'] %}
+{{ neighbor.remote_hostname | ljust(17) }}{{ neighbor.local_interface | short_name | ljust(18) }}{{ (neighbor.holdtime | default(162)) | string | rjust(3) }}        {{ (neighbor.capabilities | default('R S I')) | ljust(12) }}{{ neighbor.remote_platform | truncate(10) | ljust(10) }}{{ neighbor.remote_interface | short_name }}
+{% endif %}
+{% endfor %}
+
+Total cdp entries displayed : {{ neighbors | selectattr('discovery_protocol', 'in', ['cdp', 'both']) | list | length }}

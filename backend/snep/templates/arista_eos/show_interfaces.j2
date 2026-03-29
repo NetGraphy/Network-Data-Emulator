@@ -1,0 +1,19 @@
+{% for iface in interfaces %}
+{{ iface.name }} is {{ iface.oper_status }}{% if iface.admin_status == 'down' %} (disabled){% endif %}, line protocol is {{ iface.oper_status }}{% if iface.oper_status == 'up' %} (connected){% endif %}
+
+  Hardware is {% if iface.interface_type == 'ethernet' %}Ethernet{% elif iface.interface_type == 'loopback' %}Loopback{% elif iface.interface_type == 'management' %}Ethernet{% else %}{{ iface.interface_type }}{% endif %}, address is {{ iface.mac_address | mac_colon }}
+{% if iface.description %}
+  Description: {{ iface.description }}
+{% endif %}
+{% if iface.ip_address %}
+  Internet address is {{ iface.ip_address }}
+{% endif %}
+  Broadcast address is 255.255.255.255
+  IP MTU {{ iface.mtu }}
+{% if iface.counters %}
+  {{ iface.counters.in_unicast_pkts }} packets input, {{ iface.counters.in_octets }} bytes
+  {{ iface.counters.in_broadcast_pkts }} broadcast, {{ iface.counters.in_multicast_pkts }} multicast
+  {{ iface.counters.out_unicast_pkts }} packets output, {{ iface.counters.out_octets }} bytes
+  {{ iface.counters.in_errors }} input errors, {{ iface.counters.out_errors }} output errors
+{% endif %}
+{% endfor %}

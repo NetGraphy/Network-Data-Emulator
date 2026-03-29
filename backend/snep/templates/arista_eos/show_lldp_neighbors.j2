@@ -1,0 +1,10 @@
+Last table change time   : 0:01:00 ago
+Number of table inserts  : {{ neighbors | length }}
+Number of table deletes  : 0
+Number of table drops    : 0
+Number of table age-outs : 0
+
+Port          Neighbor Device ID    Neighbor Port ID    TTL
+{% for neighbor in neighbors %}
+{{ neighbor.local_short_name | ljust(14) }}{{ neighbor.remote_hostname | ljust(21) }}{{ neighbor.remote_short_name | ljust(20) }}120
+{% endfor %}

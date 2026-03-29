@@ -1,0 +1,13 @@
+Arista {{ hardware.get('chassis', 'DCS-7050CX3-32S') }}
+Hardware version: 11.00
+Serial number: {{ device.serial_number }}
+Hardware MAC address: {{ (interfaces[0].mac_address if interfaces else '0000.0000.0000') | mac_colon }}
+System MAC address: {{ (interfaces[0].mac_address if interfaces else '0000.0000.0000') | mac_colon }}
+
+Software image version: {{ device.software_version }}
+Architecture: x86_64
+Internal build version: {{ device.software_version }}
+
+Uptime: {{ uptime_string }}
+Total memory: {{ hardware.get('memory_mb', 16384) }} MB
+Free memory: {{ (hardware.get('memory_mb', 16384) * 0.6) | int }} MB

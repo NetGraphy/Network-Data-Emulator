@@ -1,0 +1,34 @@
+{% if interface %}
+{{ interface.name }} is {{ interface.admin_status | admin_status_display }}{% if interface.admin_status == 'up' %}, line protocol is {{ interface.oper_status }}{% if interface.oper_status == 'up' %} (connected){% endif %}{% endif %}
+
+  Hardware is {% if interface.interface_type == 'ethernet' %}Gigabit Ethernet{% elif interface.interface_type == 'loopback' %}Loopback{% elif interface.interface_type == 'vlan' %}EtherSVI{% else %}{{ interface.interface_type }}{% endif %}, address is {{ interface.mac_address | mac_cisco }} (bia {{ interface.mac_address | mac_cisco }})
+{% if interface.description %}
+  Description: {{ interface.description }}
+{% endif %}
+{% if interface.ip_address %}
+  Internet address is {{ interface.ip_address }}
+{% endif %}
+  MTU {{ interface.mtu }} bytes, BW {{ interface.speed_mbps * 1000 }} Kbit/sec, DLY {% if interface.interface_type == 'loopback' %}5000{% else %}10{% endif %} usec,
+     reliability 255/255, txload {{ interface.txload }}/255, rxload {{ interface.rxload }}/255
+  Encapsulation {% if interface.interface_type == 'loopback' %}LOOPBACK{% else %}ARPA{% endif %}, loopback not set
+  Keepalive set (10 sec)
+{% if interface.duplex and interface.interface_type == 'ethernet' %}
+  Full-duplex, {{ interface.speed_mbps }}Mb/s, media type is 10/100/1000BaseTX
+{% endif %}
+  output flow-control is unsupported, input flow-control is unsupported
+  ARP type: ARPA, ARP Timeout 04:00:00
+  Last input {{ interface.last_input }}, output {{ interface.last_output }}, output hang never
+  Last clearing of "show interface" counters never
+{% if interface.counters %}
+  5 minute input rate {{ interface.counters.rate_in_bps }} bits/sec, {{ (interface.counters.rate_in_bps / 8 / 512) | int }} packets/sec
+  5 minute output rate {{ interface.counters.rate_out_bps }} bits/sec, {{ (interface.counters.rate_out_bps / 8 / 512) | int }} packets/sec
+     {{ interface.counters.in_unicast_pkts }} packets input, {{ interface.counters.in_octets }} bytes, 0 no buffer
+     Received {{ interface.counters.in_broadcast_pkts }} broadcasts ({{ interface.counters.in_multicast_pkts }} multicasts)
+     0 runts, 0 giants, 0 throttles
+     {{ interface.counters.in_errors }} input errors, {{ interface.counters.crc_errors }} CRC, 0 frame, 0 overrun, 0 ignored
+     {{ interface.counters.out_unicast_pkts }} packets output, {{ interface.counters.out_octets }} bytes, 0 underruns
+     {{ interface.counters.out_errors }} output errors, {{ interface.counters.collisions }} collisions, 0 interface resets
+{% endif %}
+{% else %}
+% Invalid input detected at '^' marker.
+{% endif %}

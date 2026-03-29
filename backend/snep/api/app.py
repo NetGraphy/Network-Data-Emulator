@@ -1,0 +1,60 @@
+"""FastAPI application factory."""
+
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from snep.config import settings
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: ensure tables exist via alembic (run separately)
+    yield
+    # Shutdown: cleanup
+    from snep.db import engine
+    await engine.dispose()
+
+
+app = FastAPI(
+    title="SNEP - Synthetic Network Emulator Platform",
+    version="0.1.0",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Register routers
+from snep.api.platforms import router as platforms_router  # noqa: E402
+from snep.api.devices import router as devices_router  # noqa: E402
+from snep.api.interfaces import router as interfaces_router  # noqa: E402
+from snep.api.links import router as links_router  # noqa: E402
+from snep.api.cli_mappings import router as cli_mappings_router  # noqa: E402
+from snep.api.scenarios import router as scenarios_router  # noqa: E402
+from snep.api.topology import router as topology_router  # noqa: E402
+from snep.api.export import router as export_router  # noqa: E402
+from snep.api.execute import router as execute_router  # noqa: E402
+from snep.api.imports import router as imports_router  # noqa: E402
+
+app.include_router(platforms_router, prefix="/api/v1/platforms", tags=["platforms"])
+app.include_router(devices_router, prefix="/api/v1/devices", tags=["devices"])
+app.include_router(interfaces_router, prefix="/api/v1/interfaces", tags=["interfaces"])
+app.include_router(links_router, prefix="/api/v1/links", tags=["links"])
+app.include_router(cli_mappings_router, prefix="/api/v1/cli-mappings", tags=["cli-mappings"])
+app.include_router(scenarios_router, prefix="/api/v1/scenarios", tags=["scenarios"])
+app.include_router(topology_router, prefix="/api/v1/topology", tags=["topology"])
+app.include_router(export_router, prefix="/api/v1/export", tags=["export"])
+app.include_router(execute_router, prefix="/api/v1", tags=["execute"])
+app.include_router(imports_router, prefix="/api/v1/import", tags=["import"])
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}

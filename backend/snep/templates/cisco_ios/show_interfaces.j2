@@ -1,0 +1,40 @@
+{% for iface in interfaces %}
+{{ iface.name }} is {{ iface.admin_status | admin_status_display }}{% if iface.admin_status == 'up' %}, line protocol is {{ iface.oper_status }}{% if iface.oper_status == 'up' %} (connected){% endif %}{% endif %}
+
+  Hardware is {% if iface.interface_type == 'ethernet' %}Gigabit Ethernet{% elif iface.interface_type == 'loopback' %}Loopback{% elif iface.interface_type == 'vlan' %}EtherSVI{% else %}{{ iface.interface_type }}{% endif %}, address is {{ iface.mac_address | mac_cisco }} (bia {{ iface.mac_address | mac_cisco }})
+{% if iface.description %}
+  Description: {{ iface.description }}
+{% endif %}
+{% if iface.ip_address %}
+  Internet address is {{ iface.ip_address }}
+{% endif %}
+  MTU {{ iface.mtu }} bytes, BW {{ iface.speed_mbps * 1000 }} Kbit/sec, DLY {% if iface.interface_type == 'loopback' %}5000{% else %}10{% endif %} usec,
+     reliability 255/255, txload {{ iface.txload }}/255, rxload {{ iface.rxload }}/255
+  Encapsulation {% if iface.interface_type == 'loopback' %}LOOPBACK{% else %}ARPA{% endif %}, loopback not set
+  Keepalive set (10 sec)
+{% if iface.duplex and iface.interface_type == 'ethernet' %}
+  Full-duplex, {{ iface.speed_mbps }}Mb/s, media type is 10/100/1000BaseTX
+{% endif %}
+  output flow-control is unsupported, input flow-control is unsupported
+  ARP type: ARPA, ARP Timeout 04:00:00
+  Last input {{ iface.last_input }}, output {{ iface.last_output }}, output hang never
+  Last clearing of "show interface" counters never
+  Input queue: 0/75/0/0 (size/max/drops/flushes); Total output drops: 0
+  Queueing strategy: fifo
+  Output queue: 0/40 (size/max)
+{% if iface.counters %}
+  5 minute input rate {{ iface.counters.rate_in_bps }} bits/sec, {{ (iface.counters.rate_in_bps / 8 / 512) | int }} packets/sec
+  5 minute output rate {{ iface.counters.rate_out_bps }} bits/sec, {{ (iface.counters.rate_out_bps / 8 / 512) | int }} packets/sec
+     {{ iface.counters.in_unicast_pkts }} packets input, {{ iface.counters.in_octets }} bytes, 0 no buffer
+     Received {{ iface.counters.in_broadcast_pkts }} broadcasts ({{ iface.counters.in_multicast_pkts }} multicasts)
+     0 runts, 0 giants, 0 throttles
+     {{ iface.counters.in_errors }} input errors, {{ iface.counters.crc_errors }} CRC, 0 frame, 0 overrun, 0 ignored
+     0 watchdog, {{ iface.counters.in_multicast_pkts }} multicast, 0 pause input
+     {{ iface.counters.out_unicast_pkts }} packets output, {{ iface.counters.out_octets }} bytes, 0 underruns
+     {{ iface.counters.out_errors }} output errors, {{ iface.counters.collisions }} collisions, 0 interface resets
+     0 unknown protocol drops
+     0 babbles, 0 late collision, 0 deferred
+     0 lost carrier, 0 no carrier, 0 pause output
+     0 output buffer failures, 0 output buffers swapped out
+{% endif %}
+{% endfor %}

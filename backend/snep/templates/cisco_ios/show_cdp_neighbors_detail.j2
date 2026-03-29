@@ -1,0 +1,22 @@
+{% for neighbor in neighbors %}
+{% if neighbor.discovery_protocol in ['cdp', 'both'] %}
+-------------------------
+Device ID: {{ neighbor.remote_hostname }}
+Entry address(es):
+{% if neighbor.remote_ip %}
+  IP address: {{ neighbor.remote_ip | ip_only }}
+{% endif %}
+Platform: {{ neighbor.remote_platform }},  Capabilities: {{ neighbor.capabilities | default('Router Switch IGMP') }}
+Interface: {{ neighbor.local_interface }},  Port ID (outgoing port): {{ neighbor.remote_interface }}
+Holdtime : {{ neighbor.holdtime | default(162) }} sec
+
+Version :
+Cisco IOS Software, Version 17.06.05
+
+advertisement version: 2
+Duplex: full
+Power drawn: 0.000 Watts
+
+{% endif %}
+{% endfor %}
+Total cdp entries displayed : {{ neighbors | selectattr('discovery_protocol', 'in', ['cdp', 'both']) | list | length }}

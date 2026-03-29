@@ -1,0 +1,20 @@
+Cisco IOS XE Software, Version {{ device.software_version }}
+Cisco IOS Software [Bengaluru], Catalyst L3 Switch Software (CAT9K_IOSXE), Version {{ device.software_version }}, RELEASE SOFTWARE (fc2)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2024 by Cisco Systems, Inc.
+Compiled Sat 17-Jun-24 07:03 by mcpre
+
+{{ device.hostname }} uptime is {{ uptime_string }}
+System returned to ROM by PowerOn
+
+System image file is "flash:packages.conf"
+
+Last reload reason: PowerOn
+
+cisco {{ hardware.get('chassis', 'C9300-48T') }} (ARM) processor with {{ hardware.get('memory_mb', 8192) }}K/6234K bytes of memory.
+Processor board ID {{ device.serial_number }}
+{{ interfaces | length }} Virtual Ethernet interfaces
+{{ interfaces | selectattr('interface_type', 'equalto', 'ethernet') | list | length }} Gigabit Ethernet interfaces
+{{ hardware.get('flash_mb', 16384) }}K bytes of flash-simulated non-volatile configuration memory.
+
+Configuration register is 0x102

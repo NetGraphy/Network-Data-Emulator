@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+
+# Database
+*.db
+*.sqlite3
+
+# Docker
+docker-compose.override.yml
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Alembic
+backend/alembic/versions/__pycache__/
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# SSH keys (generated at runtime)
+*.pem
+host_key*

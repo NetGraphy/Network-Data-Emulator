@@ -1,0 +1,12 @@
+Capability codes:
+    (R) Router, (B) Bridge, (T) Telephone, (C) DOCSIS Cable Device
+    (W) WLAN Access Point, (P) Repeater, (S) Station, (O) Other
+
+Device ID          Local Intf     Hold-time  Capability      Port ID
+{% for neighbor in neighbors %}
+{% if neighbor.discovery_protocol in ['lldp', 'both'] %}
+{{ neighbor.remote_hostname | ljust(19) }}{{ neighbor.local_interface | short_name | ljust(15) }}{{ (neighbor.holdtime | default(120)) | string | rjust(4) }}       {{ 'B,R' | ljust(16) }}{{ neighbor.remote_interface | short_name }}
+{% endif %}
+{% endfor %}
+
+Total entries displayed: {{ neighbors | selectattr('discovery_protocol', 'in', ['lldp', 'both']) | list | length }}

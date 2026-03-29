@@ -1,0 +1,8 @@
+NAME: "Chassis", DESCR: "{{ model.display_name }}"
+PID: {{ hardware.get('chassis', 'C9300-48T') }}         , VID: V02  , SN: {{ device.serial_number }}
+
+NAME: "Power Supply Module 0", DESCR: "{{ hardware.get('chassis', 'C9300-48T') }} AC Power Supply"
+PID: PWR-C1-1100WAC        , VID: V02  , SN: {{ device.serial_number[:7] }}PS0
+
+NAME: "Fan Tray 0", DESCR: "{{ hardware.get('chassis', 'C9300-48T') }} Fan Tray"
+PID: C9300-FAN-1            , VID: V01  , SN: {{ device.serial_number[:7] }}FN0
