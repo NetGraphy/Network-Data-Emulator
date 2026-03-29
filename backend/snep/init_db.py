@@ -8,9 +8,15 @@ from snep.models import Base
 
 
 async def init():
+    import os
+    reset = os.environ.get("SNEP_RESET_DB", "false").lower() == "true"
+
     print("Creating database tables...")
     try:
         async with engine.begin() as conn:
+            if reset:
+                print("SNEP_RESET_DB=true — dropping all tables first...")
+                await conn.run_sync(Base.metadata.drop_all)
             await conn.run_sync(Base.metadata.create_all)
         print("Tables created successfully.")
     except Exception as e:
