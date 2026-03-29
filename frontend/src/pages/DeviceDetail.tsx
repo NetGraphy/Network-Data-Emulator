@@ -249,23 +249,45 @@ export default function DeviceDetail() {
           {/* Connect commands */}
           {/* Warning if not reachable */}
           {device.connection_info.ssh?.host === 'NOT_REACHABLE' && (
-            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 text-sm">
-              <h3 className="font-medium text-yellow-400 mb-1">SSH/SNMP Not Reachable from Cloud</h3>
-              <p className="text-yellow-300/70 text-xs leading-relaxed">
-                This SNEP instance is running on Railway which only proxies HTTP traffic.
-                SSH and SNMP ports are not exposed externally.
-              </p>
-              <p className="text-yellow-300/70 text-xs mt-2 leading-relaxed">
-                <strong>To connect with tools:</strong> Clone the repo and run <code className="bg-yellow-900/30 px-1 rounded">docker compose up</code> locally.
-                SSH/SNMP will be available on <code className="bg-yellow-900/30 px-1 rounded">127.0.0.1</code> with port-per-device mapping.
-              </p>
-              <div className="mt-3 space-y-1.5">
+            <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 text-sm space-y-4">
+              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+                <h3 className="font-medium text-yellow-400 text-xs mb-1">Cloud Mode — Run Locally for SSH/SNMP</h3>
+                <p className="text-yellow-300/60 text-xs">
+                  Railway only proxies HTTP. For SSH/SNMP access, clone and run locally.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="text-xs text-gray-400 mb-2">Option 1: Direct Port (per-device)</h4>
                 <code className="bg-gray-800 px-3 py-2 rounded-lg block font-mono text-cyan-400 text-xs">
-                  ssh admin@127.0.0.1 -p {device.connection_info.ssh?.port || 10000}
+                  ssh admin@127.0.0.1 -p {device.connection_info.ssh?.listen_port || 10000}
                 </code>
+              </div>
+
+              <div>
+                <h4 className="text-xs text-gray-400 mb-2">Option 2: SSH Gateway (single port, all devices)</h4>
                 <code className="bg-gray-800 px-3 py-2 rounded-lg block font-mono text-cyan-400 text-xs">
-                  snmpwalk -v2c -c {device.snmp_profile?.v2_community || 'public'} 127.0.0.1:{device.connection_info.snmp?.port || 20000} 1.3.6.1.2.1.1
+                  ssh admin%{device.hostname}@127.0.0.1 -p 2222
                 </code>
+                <p className="text-gray-500 text-[10px] mt-1">
+                  The gateway routes by username: <span className="text-gray-400">admin%hostname</span> selects the device.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="text-xs text-gray-400 mb-2">SNMP</h4>
+                <code className="bg-gray-800 px-3 py-2 rounded-lg block font-mono text-cyan-400 text-xs">
+                  snmpwalk -v2c -c {device.snmp_profile?.v2_community || 'public'} 127.0.0.1:{device.connection_info.snmp?.listen_port || 20000} 1.3.6.1.2.1.1
+                </code>
+              </div>
+
+              <div className="pt-2 border-t border-gray-800">
+                <h4 className="text-xs text-gray-400 mb-2">Quick Start</h4>
+                <div className="space-y-1">
+                  <code className="bg-gray-800 px-3 py-1.5 rounded block font-mono text-gray-300 text-xs">git clone git@github.com:NetGraphy/Network-Data-Emulator.git</code>
+                  <code className="bg-gray-800 px-3 py-1.5 rounded block font-mono text-gray-300 text-xs">cd Network-Data-Emulator && cp .env.example .env</code>
+                  <code className="bg-gray-800 px-3 py-1.5 rounded block font-mono text-gray-300 text-xs">docker compose up -d && make migrate && make seed</code>
+                </div>
               </div>
             </div>
           )}

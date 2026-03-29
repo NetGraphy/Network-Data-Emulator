@@ -37,6 +37,7 @@ services:
       dockerfile: Dockerfile
     command: python -m snep.ssh.server
     ports:
+      - "2222:2222"
       - "10000-10099:10000-10099"
     volumes:
       - ./backend:/app

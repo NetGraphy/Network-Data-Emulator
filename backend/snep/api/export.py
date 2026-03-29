@@ -68,6 +68,17 @@ async def export_nornir(db: DBSession):
     if not reachable:
         result_data["_warning"] = env.get("note", "SSH/SNMP may not be reachable in this environment.")
         result_data["_run_locally"] = "Run SNEP locally with 'docker compose up' for SSH/SNMP access."
+        # Provide local gateway-style inventory as alternative
+        result_data["_local_gateway_inventory"] = {
+            name: {
+                "hostname": "127.0.0.1",
+                "port": 2222,
+                "username": f"{host['username']}%{name}",
+                "password": host["password"],
+                "platform": host["platform"],
+            }
+            for name, host in hosts.items()
+        }
 
     return result_data
 

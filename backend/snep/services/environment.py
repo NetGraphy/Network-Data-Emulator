@@ -50,14 +50,19 @@ def detect_environment() -> dict:
                 "note": f"Railway TCP proxy active at {railway_tcp}:{tcp_port}. SSH/SNMP reachable externally.",
             }
         else:
+            # No TCP proxy yet — check if gateway port is configured
+            gateway_port = os.environ.get("SNEP_SSH_GATEWAY_PORT", "2222")
             return {
-                "type": "cloud_railway_http_only",
-                "connect_address": "NOT_REACHABLE",
+                "type": "cloud_railway_gateway",
+                "connect_address": railway_http,
+                "gateway_port": int(gateway_port),
                 "api_domain": railway_http,
                 "listen_address": "0.0.0.0",
                 "ssh_reachable": False,
-                "note": "Railway HTTP-only mode. SSH/SNMP are NOT reachable externally. "
-                        "To enable: run locally with 'docker compose up', or configure a Railway TCP proxy.",
+                "ssh_via_api": True,
+                "note": "Railway does not expose raw TCP ports. SSH/SNMP require running locally. "
+                        "Use 'docker compose up' and connect to 127.0.0.1. "
+                        "SSH gateway on port 2222 supports: ssh admin%<hostname>@127.0.0.1 -p 2222",
             }
 
     # 3. Docker container
