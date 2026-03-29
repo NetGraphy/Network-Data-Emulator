@@ -247,6 +247,23 @@ async def seed(session: AsyncSession) -> None:
             "serial_prefix": "FCW",
             "memory_mb": 8192,
             "flash_mb": 16384,
+            "processor": "ARM",
+            "config_register": "0x102",
+            "storage_prefix": "flash",
+            "boot_mode": "install",
+            "image_prefix": "cat9k_iosxe",
+            "software_family": "Catalyst L3 Switch Software",
+            "image_code": "CAT9K_IOSXE",
+            "is_iosxe": True,
+            "rom_line": "IOS-XE ROMMON",
+            "compiled_by": "mcpre",
+            "version_trains": {
+                "17.06": "Bengaluru", "17.05": "Bengaluru", "17.04": "Bengaluru",
+                "17.09": "Cupertino", "17.08": "Cupertino", "17.07": "Cupertino",
+                "17.03": "Amsterdam", "17.02": "Amsterdam", "17.01": "Amsterdam",
+                "16.12": "Gibraltar", "16.11": "Gibraltar", "16.10": "Gibraltar",
+                "16.09": "Fuji", "16.08": "Fuji", "16.07": "Fuji",
+            },
         },
     )
     a7050 = DeviceModel(

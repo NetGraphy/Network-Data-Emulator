@@ -24,11 +24,48 @@ EXTRA_VENDORS = [
 
 EXTRA_MODELS = {
     "cisco_ios": [
-        {"name": "isr_4331", "slug": "isr-4331", "display_name": "Cisco ISR 4331/K9"},
-        {"name": "isr_4321", "slug": "isr-4321", "display_name": "Cisco ISR 4321/K9"},
-        {"name": "asr_1001x", "slug": "asr-1001x", "display_name": "Cisco ASR 1001-X"},
-        {"name": "catalyst_3850_48xs", "slug": "ws-c3850-48xs", "display_name": "Cisco Catalyst 3850-48XS"},
-        {"name": "catalyst_2960x_48td", "slug": "ws-c2960x-48td-l", "display_name": "Cisco Catalyst 2960X-48TD-L"},
+        {"name": "isr_4331", "slug": "isr-4331", "display_name": "Cisco ISR 4331/K9",
+         "hardware_details": {
+             "chassis": "ISR4331/K9", "processor": "1RU", "memory_mb": 1795979, "flash_mb": 8388608,
+             "config_register": "0x2102", "storage_prefix": "bootflash", "boot_mode": "bin",
+             "image_prefix": "isr4300-universalk9", "software_family": "ISR Software",
+             "image_code": "X86_64_LINUX_IOSD-UNIVERSALK9-M", "is_iosxe": True,
+             "rom_line": "IOS-XE ROMMON", "compiled_by": "mcpre",
+             "interface_summary": ["3 Gigabit Ethernet interfaces", "1 Serial interface"],
+         }},
+        {"name": "isr_4321", "slug": "isr-4321", "display_name": "Cisco ISR 4321/K9",
+         "hardware_details": {
+             "chassis": "ISR4321/K9", "processor": "1RU", "memory_mb": 1795979, "flash_mb": 4194304,
+             "config_register": "0x2102", "storage_prefix": "bootflash", "boot_mode": "bin",
+             "image_prefix": "isr4300-universalk9", "software_family": "ISR Software",
+             "image_code": "X86_64_LINUX_IOSD-UNIVERSALK9-M", "is_iosxe": True,
+             "rom_line": "IOS-XE ROMMON", "compiled_by": "mcpre",
+         }},
+        {"name": "asr_1001x", "slug": "asr-1001x", "display_name": "Cisco ASR 1001-X",
+         "hardware_details": {
+             "chassis": "ASR1001-X", "processor": "1NG", "memory_mb": 3745036, "flash_mb": 14942207,
+             "config_register": "0x2102", "storage_prefix": "bootflash", "boot_mode": "bin",
+             "image_prefix": "asr1001x-universalk9", "software_family": "ASR1000 Software",
+             "image_code": "X86_64_LINUX_IOSD-UNIVERSALK9-M", "is_iosxe": True,
+             "rom_line": "IOS-XE ROMMON", "compiled_by": "mcpre",
+             "interface_summary": ["8 Gigabit Ethernet interfaces", "2 Ten Gigabit Ethernet interfaces"],
+         }},
+        {"name": "catalyst_3850_48xs", "slug": "ws-c3850-48xs", "display_name": "Cisco Catalyst 3850-48XS",
+         "hardware_details": {
+             "chassis": "WS-C3850-48XS", "processor": "MIPS", "memory_mb": 4194304, "flash_mb": 6294528,
+             "config_register": "0x102", "storage_prefix": "flash", "boot_mode": "install",
+             "image_prefix": "cat3k_caa-universalk9", "software_family": "Catalyst L3 Switch Software",
+             "image_code": "CAT3K_CAA-UNIVERSALK9-M", "is_iosxe": True,
+             "rom_line": "IOS-XE ROMMON", "compiled_by": "mcpre",
+         }},
+        {"name": "catalyst_2960x_48td", "slug": "ws-c2960x-48td-l", "display_name": "Cisco Catalyst 2960X-48TD-L",
+         "hardware_details": {
+             "chassis": "WS-C2960X-48TD-L", "processor": "APM86XXX", "memory_mb": 524288, "flash_mb": 131072,
+             "config_register": "0xF", "storage_prefix": "flash", "boot_mode": "bin",
+             "image_prefix": "c2960x-universalk9-mz", "software_family": "C2960X Software",
+             "image_code": "C2960X-UNIVERSALK9-M", "is_iosxe": False,
+             "compiled_by": "prod_rel_team",
+         }},
     ],
     "arista_eos": [
         {"name": "7050sx_64", "slug": "dcs-7050sx-64", "display_name": "Arista DCS-7050SX-64"},
@@ -613,6 +650,7 @@ async def seed_cli_library(session: AsyncSession) -> None:
                     platform_id=platform.id, vendor_id=vendor.id if vendor else None,
                     name=m_data["name"], slug=m_data["slug"], display_name=m_data["display_name"],
                     software_version="imported", default_interface_pattern=[],
+                    hardware_details=m_data.get("hardware_details"),
                 )
                 session.add(model)
     await session.flush()

@@ -1,20 +1,79 @@
-Cisco IOS XE Software, Version {{ device.software_version }}
-Cisco IOS Software [Bengaluru], Catalyst L3 Switch Software (CAT9K_IOSXE), Version {{ device.software_version }}, RELEASE SOFTWARE (fc2)
+{#- Cisco IOS / IOS-XE show version — fully platform-aware.
+    Renders differently based on hardware.is_iosxe, hardware.boot_mode,
+    hardware.storage_prefix, hardware.image_prefix, etc.
+-#}
+{%- set ver = device.software_version -%}
+{%- set is_iosxe = hardware.get('is_iosxe', true) -%}
+{%- set sw_family = hardware.get('software_family', 'Catalyst L3 Switch Software') -%}
+{%- set img_code = hardware.get('image_code', 'CAT9K_IOSXE') -%}
+{%- set storage = hardware.get('storage_prefix', 'flash') -%}
+{%- set boot_mode = hardware.get('boot_mode', 'install') -%}
+{%- set img_prefix = hardware.get('image_prefix', 'cat9k_iosxe') -%}
+{%- set chassis = hardware.get('chassis', 'C9300-48T') -%}
+{%- set proc = hardware.get('processor', 'ARM') -%}
+{%- set cfg_reg = hardware.get('config_register', '0x102') -%}
+{%- set compiled_by = hardware.get('compiled_by', 'mcpre') -%}
+{%- set mem = hardware.get('memory_mb', 8192) -%}
+{%- set flash = hardware.get('flash_mb', 16384) -%}
+{#- Resolve train name from version -#}
+{%- set trains = hardware.get('version_trains', {}) -%}
+{%- set ver_parts = ver.split('.') -%}
+{%- set ver_major_minor = ver_parts[0] ~ '.' ~ ver_parts[1] if ver_parts | length >= 2 else '' -%}
+{%- set train_name = trains.get(ver_major_minor, '') -%}
+{#- Build image filename -#}
+{%- if boot_mode == 'install' -%}
+  {%- set image_file = storage ~ ':packages.conf' -%}
+{%- else -%}
+  {%- set image_file = storage ~ ':' ~ img_prefix ~ '.' ~ ver ~ '.SPA.bin' -%}
+{%- endif -%}
+{%- if is_iosxe %}
+Cisco IOS XE Software, Version {{ ver }}
+Cisco IOS Software {% if train_name %}[{{ train_name }}], {% endif %}{{ sw_family }} ({{ img_code }}), Version {{ ver }}, RELEASE SOFTWARE (fc2)
+{%- else %}
+Cisco IOS Software, {{ sw_family }} ({{ img_code }}), Version {{ ver }}, RELEASE SOFTWARE (fc1)
+{%- endif %}
 Technical Support: http://www.cisco.com/techsupport
 Copyright (c) 1986-2024 by Cisco Systems, Inc.
-Compiled Sat 17-Jun-24 07:03 by mcpre
+Compiled Sat 17-Jun-24 07:03 by {{ compiled_by }}
+
+{% if is_iosxe %}
+Cisco IOS-XE software, Copyright (c) 2005-2024 by cisco Systems, Inc.
+All rights reserved.  Certain components of Cisco IOS-XE software are
+licensed under the GNU General Public License ("GPL") Version 2.0.
+
+
+ROM: {{ hardware.get('rom_line', 'IOS-XE ROMMON') }}
+{% else %}
+ROM: Bootstrap program is {{ chassis }} boot loader
+BOOTLDR: {{ chassis }} Boot Loader ({{ img_code | replace('-M', '-HBOOT-M') }}) Version {{ ver }}, RELEASE SOFTWARE (fc1)
+{% endif %}
 
 {{ device.hostname }} uptime is {{ uptime_string }}
+{% if is_iosxe %}
+Uptime for this control processor is {{ uptime_string }}
+{% endif %}
 System returned to ROM by PowerOn
-
-System image file is "flash:packages.conf"
-
+System image file is "{{ image_file }}"
 Last reload reason: PowerOn
 
-cisco {{ hardware.get('chassis', 'C9300-48T') }} (ARM) processor with {{ hardware.get('memory_mb', 8192) }}K/6234K bytes of memory.
+
+
+cisco {{ chassis }} ({{ proc }}) processor with {{ mem }}K/6147K bytes of memory.
 Processor board ID {{ device.serial_number }}
+{% if hardware.get('interface_summary') %}
+{% for line in hardware.interface_summary %}
+{{ line }}
+{% endfor %}
+{% else %}
 {{ interfaces | length }} Virtual Ethernet interfaces
 {{ interfaces | selectattr('interface_type', 'equalto', 'ethernet') | list | length }} Gigabit Ethernet interfaces
-{{ hardware.get('flash_mb', 16384) }}K bytes of flash-simulated non-volatile configuration memory.
+{% endif %}
+{% if storage == 'bootflash' %}
+32768K bytes of non-volatile configuration memory.
+{{ flash }}K bytes of physical memory.
+{{ (flash * 0.8) | int }}K bytes of flash memory at bootflash:.
+{% else %}
+{{ flash }}K bytes of flash-simulated non-volatile configuration memory.
+{% endif %}
 
-Configuration register is 0x102
+Configuration register is {{ cfg_reg }}
