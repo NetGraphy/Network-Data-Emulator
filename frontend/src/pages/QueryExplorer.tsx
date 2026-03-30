@@ -92,21 +92,27 @@ export default function QueryExplorer() {
     }
   }
 
+  const tabs: { key: Tab; label: string; desc: string }[] = [
+    { key: 'query', label: 'Query & Import', desc: 'Write queries, preview, and import inventory' },
+    { key: 'sources', label: 'Data Sources', desc: 'Configure NetBox, Nautobot, or NetGraphy connections' },
+    { key: 'mappings', label: 'Field Mappings', desc: 'Jinja2 templates that transform results into SNEP devices' },
+  ]
+
   return (
     <div className="p-6 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-xl font-semibold">Query Explorer</h2>
-          <p className="text-sm text-gray-400">Query external sources, map fields, and import inventory</p>
-        </div>
-        <div className="flex gap-1">
-          {(['query', 'sources', 'mappings'] as Tab[]).map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`px-3 py-1.5 rounded-lg text-xs ${tab === t ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-gray-200'}`}>
-              {t === 'query' ? 'Query & Import' : t === 'sources' ? 'Data Sources' : 'Mappings'}
-            </button>
-          ))}
-        </div>
+      <h2 className="text-xl font-semibold mb-4">Query Explorer</h2>
+
+      {/* Prominent horizontal tabs */}
+      <div className="flex gap-2 mb-5">
+        {tabs.map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)}
+            className={`flex-1 p-3 rounded-xl border text-left transition-colors ${
+              tab === t.key ? 'border-cyan-500 bg-cyan-500/10' : 'border-gray-800 bg-gray-900 hover:border-gray-700'
+            }`}>
+            <div className={`text-sm font-medium ${tab === t.key ? 'text-cyan-400' : 'text-gray-300'}`}>{t.label}</div>
+            <div className="text-[10px] text-gray-500 mt-0.5">{t.desc}</div>
+          </button>
+        ))}
       </div>
 
       {tab === 'query' && (
