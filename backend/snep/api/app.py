@@ -57,6 +57,7 @@ from snep.api.networking import router as networking_router  # noqa: E402
 from snep.api.settings import router as settings_router  # noqa: E402
 from snep.api.custom_filters import router as custom_filters_router  # noqa: E402
 from snep.api.query_explorer import router as query_explorer_router  # noqa: E402
+from snep.api.config_sources import router as config_sources_router  # noqa: E402
 
 app.include_router(platforms_router, prefix="/api/v1/platforms", tags=["platforms"])
 app.include_router(devices_router, prefix="/api/v1/devices", tags=["devices"])
@@ -75,6 +76,7 @@ app.include_router(networking_router, prefix="/api/v1", tags=["networking"])
 app.include_router(settings_router, prefix="/api/v1", tags=["settings"])
 app.include_router(custom_filters_router, prefix="/api/v1/custom-filters", tags=["custom-filters"])
 app.include_router(query_explorer_router, prefix="/api/v1/query", tags=["query-explorer"])
+app.include_router(config_sources_router, prefix="/api/v1/config-sources", tags=["config-sources"])
 
 
 @app.get("/health")

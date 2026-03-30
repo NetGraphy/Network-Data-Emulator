@@ -146,7 +146,19 @@ async def render_command(session: AsyncSession, device: Device, command: str) ->
     # 2. Normalize command for lookup
     canonical = _normalize_command(command)
 
-    # 3. Check CLIOutputMapping (static replay) — device-specific
+    # 3. Check for show running-config / show startup-config → DeviceConfig
+    if canonical in ("show running-config", "show startup-config"):
+        from snep.models.config_source import DeviceConfig
+        config_type = "running" if "running" in canonical else "startup"
+        config_result = await session.execute(
+            select(DeviceConfig)
+            .where(DeviceConfig.device_id == device.id, DeviceConfig.config_type == config_type)
+        )
+        dc = config_result.scalar_one_or_none()
+        if dc:
+            return {"output": dc.config_text, "mode": "config"}
+
+    # 4. Check CLIOutputMapping (static replay) — device-specific
     result = await session.execute(
         select(CLIOutputMapping)
         .where(CLIOutputMapping.device_id == device.id)

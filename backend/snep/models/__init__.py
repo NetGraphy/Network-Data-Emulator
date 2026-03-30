@@ -18,6 +18,7 @@ from snep.models.trap_destination import TrapDestination
 from snep.models.custom_filter import CustomFilter
 from snep.models.data_source import DataSource
 from snep.models.import_mapping import ImportMapping
+from snep.models.config_source import ConfigSource, DeviceConfig
 
 __all__ = [
     "Base",
@@ -43,4 +44,6 @@ __all__ = [
     "CustomFilter",
     "DataSource",
     "ImportMapping",
+    "ConfigSource",
+    "DeviceConfig",
 ]

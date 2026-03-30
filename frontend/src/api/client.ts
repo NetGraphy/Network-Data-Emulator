@@ -132,3 +132,10 @@ export const reloadCustomFilters = () => api.post('/custom-filters/reload').then
 export const fetchAllowedModules = () => api.get('/custom-filters/modules/allowed').then(r => r.data)
 export const addAllowedModule = (module: string) => api.post('/custom-filters/modules/add', { module }).then(r => r.data)
 export const fetchRegisteredFilters = () => api.get('/custom-filters/registered').then(r => r.data)
+
+// Config Sources
+export const fetchConfigSources = () => api.get('/config-sources').then(r => r.data)
+export const createConfigSource = (data: any) => api.post('/config-sources', data).then(r => r.data)
+export const deleteConfigSource = (id: string) => api.delete(`/config-sources/${id}`)
+export const syncConfigSource = (id: string) => api.post(`/config-sources/${id}/sync`).then(r => r.data)
+export const fetchDeviceRunningConfig = (deviceId: string) => api.get(`/config-sources/device-configs/${deviceId}/running`).then(r => r.data)

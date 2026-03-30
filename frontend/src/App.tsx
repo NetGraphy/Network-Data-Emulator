@@ -9,6 +9,7 @@ import QueryExplorer from './pages/QueryExplorer'
 import ScenarioList from './pages/ScenarioList'
 import Settings from './pages/Settings'
 import CustomFilters from './pages/CustomFilters'
+import ConfigSources from './pages/ConfigSources'
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/scenarios" element={<ScenarioList />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/custom-filters" element={<CustomFilters />} />
+          <Route path="/config-sources" element={<ConfigSources />} />
         </Route>
       </Routes>
     </BrowserRouter>
