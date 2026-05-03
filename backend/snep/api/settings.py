@@ -4,15 +4,14 @@ Stores settings in the database so they survive container restarts
 and can be changed from the UI without redeployment.
 """
 
-import uuid
 from fastapi import APIRouter
 from pydantic import BaseModel
 from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from snep.api.deps import DBSession
 from snep.models.connection import ConnectionMapping
 from snep.services.environment import detect_environment, get_connect_address
+from snep.services.gateway import build_ssh_gateway_info, is_cloud_gateway_mode
 
 router = APIRouter()
 
@@ -31,16 +30,13 @@ async def get_networking_settings(db: DBSession):
     env = detect_environment()
 
     # Get actual stored connect addresses from DB
-    result = await db.execute(
-        select(ConnectionMapping).where(ConnectionMapping.protocol == "ssh").limit(1)
-    )
+    result = await db.execute(select(ConnectionMapping).where(ConnectionMapping.protocol == "ssh").limit(1))
     sample = result.scalar_one_or_none()
 
     # Count devices
     from sqlalchemy import func
-    device_count = await db.scalar(
-        select(func.count(func.distinct(ConnectionMapping.device_id)))
-    )
+
+    device_count = await db.scalar(select(func.count(func.distinct(ConnectionMapping.device_id))))
 
     # Get all unique connect addresses in use
     addrs = await db.execute(
@@ -74,9 +70,7 @@ async def update_connect_address(body: dict, db: DBSession):
         new_address = get_connect_address()
 
     # Update all connection mappings
-    await db.execute(
-        update(ConnectionMapping).values(connect_address=new_address)
-    )
+    await db.execute(update(ConnectionMapping).values(connect_address=new_address))
     await db.commit()
 
     # Verify
@@ -97,60 +91,70 @@ def _build_connection_methods(env: dict, sample, device_count: int) -> list[dict
     methods = []
     connect = sample.connect_address if sample else "127.0.0.1"
     ssh_port = sample.listen_port if sample else 10000
+    gateway = build_ssh_gateway_info("core-rtr-01", env=env, fallback_host=connect)
+
+    cloud_gateway = is_cloud_gateway_mode(env)
 
     # Method 1: Direct port-per-device
-    methods.append({
-        "id": "port_per_device",
-        "name": "Direct Port (per device)",
-        "description": "Each device has its own SSH port. Simple, works with all tools.",
-        "when_to_use": "Local Docker, lab environments, small deployments",
-        "example_ssh": f"ssh admin@{connect} -p {ssh_port}",
-        "example_nornir": {
-            "hostname": connect,
-            "port": ssh_port,
-            "username": "admin",
-            "password": "cisco123",
-        },
-        "pros": ["Works with any SSH tool", "Standard Nornir/Ansible inventory", "No special client config"],
-        "cons": [f"Requires {device_count} ports exposed", "Port numbers must be tracked"],
-        "available": connect != "NOT_REACHABLE",
-    })
+    methods.append(
+        {
+            "id": "port_per_device",
+            "name": "Direct Port (per device)",
+            "description": "Each device has its own SSH port. Simple, works with all tools.",
+            "when_to_use": "Local Docker, lab environments, small deployments",
+            "example_ssh": f"ssh admin@{connect} -p {ssh_port}",
+            "example_nornir": {
+                "hostname": connect,
+                "port": ssh_port,
+                "username": "admin",
+                "password": "cisco123",
+            },
+            "pros": ["Works with any SSH tool", "Standard Nornir/Ansible inventory", "No special client config"],
+            "cons": [f"Requires {device_count} ports exposed", "Port numbers must be tracked"],
+            "available": connect != "NOT_REACHABLE" and not cloud_gateway,
+        }
+    )
 
     # Method 2: SSH Gateway
-    methods.append({
-        "id": "ssh_gateway",
-        "name": "SSH Gateway (single port)",
-        "description": "One port for all devices. Device selected via username: admin%hostname",
-        "when_to_use": "Cloud, NAT, firewalled environments, large deployments",
-        "example_ssh": f"ssh admin%core-rtr-01@{connect} -p 2222",
-        "example_nornir": {
-            "hostname": connect,
-            "port": 2222,
-            "username": "admin%core-rtr-01",
-            "password": "cisco123",
-        },
-        "pros": ["Only 1 port needed", "Works behind NAT/firewall", "Scales to thousands of devices"],
-        "cons": ["Username format requires % separator", "Some tools may not support % in username"],
-        "available": connect != "NOT_REACHABLE",
-    })
+    methods.append(
+        {
+            "id": "ssh_gateway",
+            "name": "SSH Gateway (single port)",
+            "description": "One port for all devices. Device selected via username: admin%hostname",
+            "when_to_use": "Cloud, NAT, firewalled environments, large deployments",
+            "example_ssh": gateway["command"] or f"ssh admin%core-rtr-01@{gateway['host']} -p {gateway['port']}",
+            "example_nornir": {
+                "hostname": gateway["host"],
+                "port": gateway["port"],
+                "username": gateway["username"],
+                "password": "cisco123",
+            },
+            "pros": ["Only 1 port needed", "Works behind NAT/firewall", "Scales to thousands of devices"],
+            "cons": ["Username format requires % separator", "Some tools may not support % in username"],
+            "available": gateway["available"],
+            "recommended": cloud_gateway,
+        }
+    )
 
     # Method 3: Loopback aliases (native only)
-    methods.append({
-        "id": "loopback_aliases",
-        "name": "Loopback Aliases (native)",
-        "description": "Each device gets its own 127.x.x.x IP with standard ports (22, 161).",
-        "when_to_use": "Native (non-Docker) environments, maximum realism",
-        "example_ssh": "ssh admin@127.0.0.2 -p 22",
-        "example_nornir": {
-            "hostname": "127.0.0.2",
-            "port": 22,
-            "username": "admin",
-            "password": "cisco123",
-        },
-        "setup_required": "Run: sudo ifconfig lo0 alias 127.0.0.2 (macOS) or ip addr add 127.0.0.2/32 dev lo (Linux)",
-        "pros": ["Standard ports (22/161)", "Most realistic", "Tools work with zero config"],
-        "cons": ["Requires sudo/root for alias setup", "Not available in Docker"],
-        "available": env.get("type") in ("native", "native_loopback"),
-    })
+    methods.append(
+        {
+            "id": "loopback_aliases",
+            "name": "Loopback Aliases (native)",
+            "description": "Each device gets its own 127.x.x.x IP with standard ports (22, 161).",
+            "when_to_use": "Native (non-Docker) environments, maximum realism",
+            "example_ssh": "ssh admin@127.0.0.2 -p 22",
+            "example_nornir": {
+                "hostname": "127.0.0.2",
+                "port": 22,
+                "username": "admin",
+                "password": "cisco123",
+            },
+            "setup_required": "Run: sudo ifconfig lo0 alias 127.0.0.2 (macOS) or ip addr add 127.0.0.2/32 dev lo (Linux)",
+            "pros": ["Standard ports (22/161)", "Most realistic", "Tools work with zero config"],
+            "cons": ["Requires sudo/root for alias setup", "Not available in Docker"],
+            "available": env.get("type") in ("native", "native_loopback"),
+        }
+    )
 
     return methods

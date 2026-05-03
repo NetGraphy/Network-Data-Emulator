@@ -5,14 +5,21 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from snep.api.deps import DBSession
-from snep.models import ConnectionMapping, Device, DeviceCredential, DeviceModel, SNMPProfile
+from snep.models import Device, DeviceModel
+from snep.services.environment import detect_environment
+from snep.services.gateway import build_ssh_gateway_info, is_cloud_gateway_mode
 
 router = APIRouter()
 
 
 @router.get("/nornir")
-async def export_nornir(db: DBSession):
+async def export_nornir(db: DBSession, connection_mode: str | None = None):
     """Export Nornir-compatible inventory (hosts.yaml format)."""
+    env = detect_environment()
+    use_gateway = connection_mode in {"gateway", "cloud_gateway"} or (
+        connection_mode is None and is_cloud_gateway_mode(env)
+    )
+
     result = await db.execute(
         select(Device)
         .options(
@@ -31,11 +38,19 @@ async def export_nornir(db: DBSession):
         ssh_mapping = next((cm for cm in d.connection_mappings if cm.protocol == "ssh"), None)
         snmp_mapping = next((cm for cm in d.connection_mappings if cm.protocol == "snmp"), None)
         cred = d.credentials[0] if d.credentials else None
+        gateway = build_ssh_gateway_info(
+            d.hostname,
+            credential_username=cred.username if cred else "admin",
+            env=env,
+            fallback_host=ssh_mapping.connect_address if ssh_mapping else "127.0.0.1",
+        )
 
         host_entry = {
-            "hostname": ssh_mapping.connect_address if ssh_mapping else "127.0.0.1",
-            "port": ssh_mapping.connect_port if ssh_mapping else 22,
-            "username": cred.username if cred else "admin",
+            "hostname": gateway["host"]
+            if use_gateway
+            else (ssh_mapping.connect_address if ssh_mapping else "127.0.0.1"),
+            "port": gateway["port"] if use_gateway else (ssh_mapping.connect_port if ssh_mapping else 22),
+            "username": gateway["username"] if use_gateway else (cred.username if cred else "admin"),
             "password": cred.password if cred else "admin",
             "platform": d.device_model.platform.name if d.device_model and d.device_model.platform else "cisco_ios",
             "data": {
@@ -49,12 +64,17 @@ async def export_nornir(db: DBSession):
             host_entry["data"]["snmp_host"] = snmp_mapping.connect_address
         if d.snmp_profile and d.snmp_profile.v2_community:
             host_entry["data"]["snmp_community"] = d.snmp_profile.v2_community
+            if use_gateway:
+                host_entry["data"]["snmp_v2_community_gateway"] = f"{d.snmp_profile.v2_community}@{d.hostname}"
+                host_entry["data"]["snmp_public_udp_available"] = not str(env.get("type", "")).startswith(
+                    "cloud_railway"
+                )
+        if use_gateway:
+            host_entry["data"]["snep_route_key"] = d.hostname
 
         hosts[d.hostname] = host_entry
 
     # Check if SSH is reachable and add warning if not
-    from snep.services.environment import detect_environment
-    env = detect_environment()
     reachable = env.get("ssh_reachable", True)
 
     result_data = {
@@ -73,7 +93,7 @@ async def export_nornir(db: DBSession):
             name: {
                 "hostname": "127.0.0.1",
                 "port": 2222,
-                "username": f"{host['username']}%{name}",
+                "username": f"{host['username'].split('%', 1)[0]}%{name}",
                 "password": host["password"],
                 "platform": host["platform"],
             }
@@ -84,8 +104,13 @@ async def export_nornir(db: DBSession):
 
 
 @router.get("/ansible")
-async def export_ansible(db: DBSession):
+async def export_ansible(db: DBSession, connection_mode: str | None = None):
     """Export Ansible-compatible inventory."""
+    env = detect_environment()
+    use_gateway = connection_mode in {"gateway", "cloud_gateway"} or (
+        connection_mode is None and is_cloud_gateway_mode(env)
+    )
+
     result = await db.execute(
         select(Device)
         .options(
@@ -103,6 +128,12 @@ async def export_ansible(db: DBSession):
         ssh_mapping = next((cm for cm in d.connection_mappings if cm.protocol == "ssh"), None)
         cred = d.credentials[0] if d.credentials else None
         platform = d.device_model.platform.name if d.device_model and d.device_model.platform else "cisco_ios"
+        gateway = build_ssh_gateway_info(
+            d.hostname,
+            credential_username=cred.username if cred else "admin",
+            env=env,
+            fallback_host=ssh_mapping.connect_address if ssh_mapping else "127.0.0.1",
+        )
 
         # Map SNEP platform to Ansible network_os
         ansible_platform_map = {
@@ -112,9 +143,11 @@ async def export_ansible(db: DBSession):
         }
 
         hosts[d.hostname] = {
-            "ansible_host": ssh_mapping.connect_address if ssh_mapping else "127.0.0.1",
-            "ansible_port": ssh_mapping.connect_port if ssh_mapping else 22,
-            "ansible_user": cred.username if cred else "admin",
+            "ansible_host": gateway["host"]
+            if use_gateway
+            else (ssh_mapping.connect_address if ssh_mapping else "127.0.0.1"),
+            "ansible_port": gateway["port"] if use_gateway else (ssh_mapping.connect_port if ssh_mapping else 22),
+            "ansible_user": gateway["username"] if use_gateway else (cred.username if cred else "admin"),
             "ansible_password": cred.password if cred else "admin",
             "ansible_network_os": ansible_platform_map.get(platform, platform),
             "ansible_connection": "ansible.netcommon.network_cli",

@@ -19,7 +19,8 @@ from sqlalchemy.orm import selectinload
 
 from snep.config import settings
 from snep.db import async_session_factory
-from snep.models import ConnectionMapping, Device, DeviceCredential, DeviceModel
+from snep.models import ConnectionMapping, Device, DeviceModel
+from snep.services.gateway import parse_gateway_username, resolve_route_key
 from snep.ssh.session import CLISession
 
 logger = logging.getLogger(__name__)
@@ -49,21 +50,19 @@ class SNEPSSHServer(asyncssh.SSHServer):
 
     def begin_auth(self, username):
         if self._gateway_mode:
-            # Parse "admin%hostname" format
-            if "%" in username:
-                cred_user, hostname = username.split("%", 1)
-                self._resolved_device = _device_by_hostname.get(hostname)
-                self._resolved_username = cred_user
+            principal = parse_gateway_username(username)
+            if principal:
+                self._resolved_device = resolve_route_key(principal.route_key, _device_by_hostname)
+                self._resolved_username = principal.credential_username
                 if not self._resolved_device:
-                    logger.warning(f"Gateway: unknown device '{hostname}' in username '{username}'")
+                    logger.warning("Gateway: unknown device route key '%s'", principal.route_key)
             else:
-                # No device specified — show help or reject
                 self._resolved_username = username
                 self._resolved_device = None
         else:
             self._resolved_username = username
             self._resolved_device = self._device_info
-        return False
+        return True
 
     def password_auth_supported(self):
         return True
@@ -75,13 +74,19 @@ class SNEPSSHServer(asyncssh.SSHServer):
 
         actual_user = self._resolved_username or username
 
+        authenticated = False
         for cred in device.get("credentials", []):
             if cred["username"] == actual_user and cred["password"] == password:
-                return True
+                authenticated = True
+                break
         defaults = device.get("default_credentials", {})
-        if defaults.get("username") == actual_user and defaults.get("password") == password:
-            return True
-        return False
+        if not authenticated and defaults.get("username") == actual_user and defaults.get("password") == password:
+            authenticated = True
+
+        if authenticated:
+            self._conn.set_extra_info(snep_device_info=device, snep_username=actual_user)
+
+        return authenticated
 
 
 async def _load_device_map() -> None:
@@ -93,7 +98,9 @@ async def _load_device_map() -> None:
             select(ConnectionMapping)
             .options(
                 selectinload(ConnectionMapping.device).selectinload(Device.credentials),
-                selectinload(ConnectionMapping.device).selectinload(Device.device_model).selectinload(DeviceModel.platform),
+                selectinload(ConnectionMapping.device)
+                .selectinload(Device.device_model)
+                .selectinload(DeviceModel.platform),
             )
             .where(ConnectionMapping.protocol == "ssh")
         )
@@ -112,7 +119,9 @@ async def _load_device_map() -> None:
                 "credentials": [{"username": c.username, "password": c.password} for c in device.credentials],
                 "enable_password": next((c.enable_password for c in device.credentials if c.enable_password), None),
                 "privilege_level": max((c.privilege_level for c in device.credentials), default=1),
-                "default_credentials": platform.default_credentials if platform else {"username": "admin", "password": "admin"},
+                "default_credentials": platform.default_credentials
+                if platform
+                else {"username": "admin", "password": "admin"},
                 "listen_address": mapping.listen_address,
                 "listen_port": mapping.listen_port,
             }
@@ -125,7 +134,6 @@ async def _load_device_map() -> None:
 
 async def _start_per_device_servers(host_key_path: str):
     """Start one SSH listener per device (port-per-device mode)."""
-    tasks = []
     for key, device_info in _device_by_endpoint.items():
         addr = device_info["listen_address"]
         port = device_info["listen_port"]
@@ -133,12 +141,14 @@ async def _start_per_device_servers(host_key_path: str):
         def make_factory(di):
             def factory():
                 return SNEPSSHServer(device_info=di, gateway_mode=False)
+
             return factory
 
         async def make_handler(di):
             async def handler(process):
                 cli = CLISession(di, async_session_factory)
                 await cli.handle_session(process)
+
             return handler
 
         try:
@@ -165,9 +175,7 @@ async def _start_gateway_server(host_key_path: str, port: int):
         return SNEPSSHServer(device_info=None, gateway_mode=True)
 
     async def gateway_handler(process):
-        # Resolve which device this session is for from the SSH server instance
-        server = process.get_server()
-        device_info = server._resolved_device
+        device_info = process.get_extra_info("snep_device_info")
 
         if not device_info:
             # List available devices
@@ -230,9 +238,8 @@ async def main():
     # Start per-device servers (always, for local/Docker use)
     await _start_per_device_servers(host_key_path)
 
-    # Start gateway server (single port for cloud/proxy use)
-    gateway_port = int(os.environ.get("SNEP_SSH_GATEWAY_PORT", "2222"))
-    await _start_gateway_server(host_key_path, gateway_port)
+    if settings.networking.ssh_gateway_enabled:
+        await _start_gateway_server(host_key_path, settings.networking.ssh_gateway_port)
 
     logger.info("All SSH servers started. Waiting for connections...")
     await asyncio.Event().wait()

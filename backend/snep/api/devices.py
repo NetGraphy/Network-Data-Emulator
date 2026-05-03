@@ -5,18 +5,20 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from snep.api.deps import DBSession, PaginationDep
+from snep.config import settings
 from snep.models import (
-    ConnectionMapping,
     Device,
     DeviceCredential,
     DeviceModel,
     Interface,
     SNMPProfile,
 )
+from snep.services.environment import detect_environment
+from snep.services.gateway import build_ssh_gateway_info, is_cloud_gateway_mode
 from snep.services.networking import allocate_connection_mappings
 
 router = APIRouter()
@@ -74,15 +76,17 @@ async def list_devices(db: DBSession, pg: PaginationDep):
     devices = result.scalars().all()
     out = []
     for d in devices:
-        out.append(DeviceSummary(
-            id=d.id,
-            hostname=d.hostname,
-            management_ip=str(d.management_ip) if d.management_ip else None,
-            admin_state=d.admin_state,
-            tags=d.tags,
-            platform_name=d.device_model.platform.name if d.device_model and d.device_model.platform else None,
-            model_name=d.device_model.display_name if d.device_model else None,
-        ))
+        out.append(
+            DeviceSummary(
+                id=d.id,
+                hostname=d.hostname,
+                management_ip=str(d.management_ip) if d.management_ip else None,
+                admin_state=d.admin_state,
+                tags=d.tags,
+                platform_name=d.device_model.platform.name if d.device_model and d.device_model.platform else None,
+                model_name=d.device_model.display_name if d.device_model else None,
+            )
+        )
     return out
 
 
@@ -113,6 +117,23 @@ async def get_device(device_id: uuid.UUID, db: DBSession):
             "listen_port": cm.listen_port,
         }
 
+    env = detect_environment()
+    cred = device.credentials[0] if device.credentials else None
+    gateway_info = build_ssh_gateway_info(
+        hostname=device.hostname,
+        credential_username=cred.username if cred else "admin",
+        env=env,
+        fallback_host=conn_info.get("ssh", {}).get("host", "127.0.0.1"),
+    )
+    conn_info["mode"] = "cloud_gateway" if is_cloud_gateway_mode(env) else "local"
+    conn_info["ssh_gateway"] = gateway_info
+    if is_cloud_gateway_mode(env):
+        conn_info["ssh"] = {
+            **gateway_info,
+            "listen_host": "0.0.0.0",
+            "listen_port": settings.networking.ssh_gateway_port,
+        }
+
     now = datetime.now(timezone.utc)
     uptime = device.uptime_seconds + int((now - device.uptime_reference).total_seconds())
 
@@ -121,7 +142,8 @@ async def get_device(device_id: uuid.UUID, db: DBSession):
         "hostname": device.hostname,
         "management_ip": str(device.management_ip) if device.management_ip else None,
         "serial_number": device.serial_number,
-        "software_version": device.software_version or (device.device_model.software_version if device.device_model else None),
+        "software_version": device.software_version
+        or (device.device_model.software_version if device.device_model else None),
         "admin_state": device.admin_state,
         "current_uptime_seconds": uptime,
         "tags": device.tags,
@@ -129,18 +151,24 @@ async def get_device(device_id: uuid.UUID, db: DBSession):
             "id": str(device.device_model.id),
             "name": device.device_model.name,
             "display_name": device.device_model.display_name,
-        } if device.device_model else None,
+        }
+        if device.device_model
+        else None,
         "platform": {
             "id": str(device.device_model.platform.id),
             "name": device.device_model.platform.name,
-        } if device.device_model and device.device_model.platform else None,
+        }
+        if device.device_model and device.device_model.platform
+        else None,
         "interface_count": len(device.interfaces),
         "connection_info": conn_info,
         "snmp_profile": {
             "v2_enabled": device.snmp_profile.v2_enabled,
             "v2_community": device.snmp_profile.v2_community,
             "v3_enabled": device.snmp_profile.v3_enabled,
-        } if device.snmp_profile else None,
+        }
+        if device.snmp_profile
+        else None,
         "cli_mapping_count": len(device.cli_mappings),
     }
 
@@ -165,27 +193,32 @@ async def create_device(body: DeviceCreate, db: DBSession):
     await db.flush()
 
     # Credential
-    db.add(DeviceCredential(
-        device_id=device.id,
-        username=body.username,
-        password=body.password,
-        enable_password=body.enable_password,
-        privilege_level=1,
-    ))
+    db.add(
+        DeviceCredential(
+            device_id=device.id,
+            username=body.username,
+            password=body.password,
+            enable_password=body.enable_password,
+            privilege_level=1,
+        )
+    )
 
     # SNMP Profile
     if body.auto_create_snmp_profile:
-        db.add(SNMPProfile(
-            device_id=device.id,
-            v2_enabled=True,
-            v2_community="public",
-        ))
+        db.add(
+            SNMPProfile(
+                device_id=device.id,
+                v2_enabled=True,
+                v2_community="public",
+            )
+        )
 
     # Auto-create interfaces from model
     if body.auto_create_interfaces:
         model = await db.get(DeviceModel, body.device_model_id)
         if model and model.default_interface_pattern:
             from snep.models.interface import InterfaceCounter
+
             idx = 1
             now = datetime.now(timezone.utc)
             for pattern in model.default_interface_pattern:
@@ -208,13 +241,15 @@ async def create_device(body: DeviceCreate, db: DBSession):
                     )
                     db.add(iface)
                     await db.flush()
-                    db.add(InterfaceCounter(
-                        interface_id=iface.id,
-                        rate_in_bps=300_000_000 if pattern.get("speed", 1000) >= 1000 else 0,
-                        rate_out_bps=150_000_000 if pattern.get("speed", 1000) >= 1000 else 0,
-                        rate_reference=now,
-                        updated_at=now,
-                    ))
+                    db.add(
+                        InterfaceCounter(
+                            interface_id=iface.id,
+                            rate_in_bps=300_000_000 if pattern.get("speed", 1000) >= 1000 else 0,
+                            rate_out_bps=150_000_000 if pattern.get("speed", 1000) >= 1000 else 0,
+                            rate_reference=now,
+                            updated_at=now,
+                        )
+                    )
                     idx += 1
 
     # Connection mappings
@@ -249,6 +284,7 @@ async def delete_device(device_id: uuid.UUID, db: DBSession):
 @router.get("/{device_id}/neighbors")
 async def get_device_neighbors(device_id: uuid.UUID, db: DBSession):
     from snep.services.state import get_neighbors
+
     return await get_neighbors(db, str(device_id))
 
 
